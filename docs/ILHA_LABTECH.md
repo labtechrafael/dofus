@@ -1,5 +1,7 @@
 # Arquipélago LabTech
 
+![A ilha LabTech no mapa-mundi](imagens/mapa-mundi.png)
+
 A ilha dos inventores. Fica a leste do continente no mapa-mundi (por volta de **[35..38, -10..-7]**) e é onde todo
 personagem novo nasce, no **Laboratório LabTech**. Aqui ninguém recebeu poder dos deuses: tudo foi construído com as
 próprias mãos, com gambiarra, ciência e muita cerveja artesanal.
@@ -115,6 +117,8 @@ Homenagens a projetos de inteligência artificial do canal LabTech:
 
 ### Bar das Celebridades
 
+![Bar das Celebridades](imagens/celebridades.png)
+
 Vinte famosos que amam cerveja, cada um com um personagem próprio que lembra o original. Todos são paródias:
 - Bigodix, o Gaulês;
 - Pedrix, Carregador de Menires;
@@ -138,6 +142,8 @@ Vinte famosos que amam cerveja, cada um com um personagem próprio que lembra o 
 - Rique Sanches.
 
 Converse com todos: cada um tem a sua história e pelo menos uma pergunta extra.
+
+![Retratos dos diálogos](imagens/retratos.png)
 
 ---
 

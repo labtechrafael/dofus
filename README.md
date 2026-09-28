@@ -1,5 +1,7 @@
 # Dofus LabTech
 
+![LabTech, a 13ª classe](docs/imagens/labtech.png)
+
 Um servidor **local** de Dofus Retro 1.39.8, para jogar sozinho ou com amigos no seu próprio PC, com um mundo
 novo feito do zero: a **classe LabTech** (13ª classe), uma ilha própria, NPCs, missões, lojas e um painel web para
 controlar tudo.
@@ -40,6 +42,19 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
   - modo escravo, em que os outros personagens seguem o seu;
   - comandos de GM em português;
   - guias do jogo.
+
+## Imagens
+
+| | |
+|---|---|
+| ![Bar das Celebridades](docs/imagens/celebridades.png) | ![Inventário com o Conjunto Jaleco LabTech](docs/imagens/inventario.png) |
+| **Bar das Celebridades**: 20 paródias, cada uma com personagem próprio | **Inventário**: Conjunto Jaleco, Caneca, Manopla e o Drone de IA |
+| ![Tela de criação](docs/imagens/criacao.png) | ![A ilha no mapa-mundi](docs/imagens/mapa-mundi.png) |
+| **Tela de criação**, no mesmo traço das outras classes | **A ilha LabTech** no mapa-mundi |
+
+![A manopla no braço, correndo](docs/imagens/corrida.png)
+
+<sub>Imagens do jogo rodando localmente com este projeto. Dofus e toda a sua arte são da Ankama Games.</sub>
 
 ## Requisitos
 

@@ -1,5 +1,7 @@
 # Classe LabTech (13ª classe)
 
+![LabTech masculino e feminino](imagens/labtech.png)
+
 > *"Inventores de mão cheia: um pouco de cada classe, feito com as próprias mãos."*
 
 ## História
@@ -14,6 +16,8 @@ montou um laboratório nos fundos e passou três noites seguidas fazendo gambiar
 
 ## Visual
 
+![Tela de criação](imagens/criacao.png)
+
 Existe em versão masculina e feminina, com arte no mesmo traço do jogo: tela de criação com medalhão, retratos,
 miniatura da linha do tempo e o retrato grande da luta.
 
@@ -24,6 +28,8 @@ miniatura da linha do tempo e o retrato grande da luta.
   no dorso da mão. Faz parte do corpo, então aparece sempre, parado, andando, correndo ou lutando, com qualquer arma.
 - **Caneca de cerveja** na outra mão (o escudo Caneca da Gambiarra).
 - **Drone de IA**: o familiar, um cubo ciano com carinha na tela que flutua ao lado do personagem.
+
+![A manopla no braço, correndo](imagens/corrida.png)
 
 O corpo foi feito a partir do esqueleto do Feca, com as mesmas proporções e os mesmos pontos de encaixe. Por isso
 **chapéus, capas, escudos e familiares de qualquer classe servem** no LabTech.
@@ -73,6 +79,8 @@ O dano é o da arma mais forte do jogo, a Épée Clipse. A linha neutra rouba vi
 +100 vitalidade, +1000 iniciativa e **30% de resistência a todos os elementos**.
 
 ### Conjunto Jaleco LabTech
+
+![Inventário com o conjunto completo](imagens/inventario.png)
 
 | Peça | Atributos |
 |---|---|
