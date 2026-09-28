@@ -1,0 +1,826 @@
+diff --git a/scripts/Data.lua b/scripts/Data.lua
+index e0d62c9..5f06ec9 100644
+--- a/scripts/Data.lua
++++ b/scripts/Data.lua
+@@ -32,6 +32,7 @@ loadPack("data/npcs")
+ loadPack("data/maps")
+ loadPack("data/quests")
+ loadPack("data/dungeons") -- Always load after maps
++loadPack("data/zz_labtech") -- LabTech: lojas e ajustes em mapas oficiais (depois dos mapas)
+ 
+ -- Load other gameplay features
+ requireReload("data/Dopples")
+diff --git a/scripts/data/Dungeons.lua b/scripts/data/Dungeons.lua
+index 049010a..df5d987 100644
+--- a/scripts/data/Dungeons.lua
++++ b/scripts/data/Dungeons.lua
+@@ -30,18 +30,13 @@ setmetatable(Dungeon, {
+ ---@param player Player
+ ---@param keyID number
+ ---@return boolean
++-- LabTech: o Molho de Chaves nunca acaba. Ter o molho no inventario abre todos os calaboucos, sem gastar a chave.
+ function hasKeyChainFor(player, keyID)
+-    local item = player:getItem(keychainTemplateID, 1)
+-    if not item then return false end
+-    -- Keys are stored as hex value in keychain
+-    return item:hasTxtStat(keychainStatID, hex(keyID))
++    return player:getItem(keychainTemplateID, 1) ~= nil
+ end
+ 
+ function useKeyChainFor(player, keyID)
+-    local item = player:getItem(keychainTemplateID, 1)
+-    if not item then return false end
+-    -- Keys are stored as hex value in keychain
+-    return item:consumeTxtStat(player, keychainStatID, hex(keyID))
++    return player:getItem(keychainTemplateID, 1) ~= nil
+ end
+ 
+ ---@param player Player
+diff --git a/scripts/data/Experience.lua b/scripts/data/Experience.lua
+index ddacb51..20217e8 100644
+--- a/scripts/data/Experience.lua
++++ b/scripts/data/Experience.lua
+@@ -48,6 +48,17 @@ MaxBanditLevel = 50
+ -- Tables
+ PlayerLevelExp = {0,110,650,1500,2800,4800,7300,10500,14500,19200,25200,32600,41000,50500,61000,75000,91000,115000,142000,171000,202000,235000,270000,310000,353000,398500,448000,503000,561000,621600,687000,755000,829000,910000,1000000,1100000,1240000,1400000,1580000,1780000,2000000,2250000,2530000,2850000,3200000,3570000,3960000,4400000,4860000,5350000,5860000,6390000,6950000,7530000,8130000,8765100,9420000,10150000,10894000,11650000,12450000,13280000,14130000,15170000,16251000,17377000,18553000,19778000,21055000,22385000,23529000,25209000,26707000,28264000,29882000,31563000,33307000,35118000,36997000,38945000,40965000,43059000,45229000,47476000,49803000,52211000,54704000,57284000,59952000,62712000,65565000,68514000,71561000,74710000,77963000,81323000,84792000,88374000,92071000,95886000,99823000,103885000,108075000,112396000,116853000,121447000,126184000,131066000,136098000,141283000,146626000,152130000,157800000,163640000,169655000,175848000,182225000,188791000,195550000,202507000,209667000,217037000,224620000,232424000,240452000,248712000,257209000,265949000,274939000,284186000,293694000,303473000,313527000,323866000,334495000,345423000,356657000,368206000,380076000,392278000,404818000,417706000,430952000,444564000,458551000,472924000,487693000,502867000,518458000,534476000,551000000,567839000,585206000,603047000,621374000,640199000,659536000,679398000,699798000,720751000,742772000,764374000,787074000,810387000,834329000,858917000,884167000,910098000,936727000,964073000,992154000,1020991000,1050603000,1081010000,1112235000,1144298000,1177222000,1211030000,1245745000,1281393000,1317997000,1355584000,1404179000,1463811000,1534506000,1616294000,1709205000,1813267000,1928513000,2054975000,2192686000,2341679000,2501990000,2673655000,2856710000,3051194000,3257146000,3474606000,3703616000,7407232000}
+ 
++-- [Painel local] Niveis acima de 200: PlayerLevelCap define o nivel maximo.
++PlayerLevelCap = 300
++do
++    local step = 500000000
++    while #PlayerLevelExp < PlayerLevelCap do
++        table.insert(PlayerLevelExp, PlayerLevelExp[#PlayerLevelExp] + math.floor(step))
++        step = step * 1.02
++    end
++end
++MaxPlayerLevel = PlayerLevelCap
++
+ GuildLevelExp = mult(10, PlayerLevelExp)
+ 
+ JobLevelExp = { 0, 50, 140, 271, 441, 653, 905, 1199, 1543, 1911, 2330, 2792, 3297, 3840, 4439, 5078, 5762, 6493, 7280, 8097, 8980, 9898, 10875, 11903, 12985, 14122, 15315, 16564, 17873, 19242, 20672, 22166, 23726, 25353, 27048, 28815, 30656, 32572, 34566, 36641, 38800, 41044, 43378, 45804, 48325, 50946, 53669, 56498, 59437, 62491, 65664, 68960, 72385, 75943, 79640, 83482, 87475, 91624, 95937, 100421, 105082, 109930, 114971, 120215, 125671, 131348, 137256, 143407, 149811, 156481, 163429, 170669, 178214, 186080, 194283, 202839, 211765, 221082, 230808, 240964, 251574, 262660, 274248, 286364, 299037, 312297, 326175, 340705, 355924, 371870, 388582, 406106, 424486, 443772, 464016, 485274, 507604, 531071, 555541, 581687}
+diff --git a/src/org/starloco/locos/client/Player.java b/src/org/starloco/locos/client/Player.java
+index 6ba6d0f..f17e75b 100644
+--- a/src/org/starloco/locos/client/Player.java
++++ b/src/org/starloco/locos/client/Player.java
+@@ -509,7 +509,7 @@ public class Player implements Scripted<SPlayer>, Actor {
+         if (Config.allZaap) {
+             z = Constant.ZAAPS.keySet().stream().map(Object::toString).collect(Collectors.joining(","));
+         }
+-        if (classe > 12 || classe < 1)
++        if (classe > 13 || classe < 1)
+             return null;
+         if (sexe < 0 || sexe > 1)
+             return null;
+@@ -517,7 +517,8 @@ public class Player implements Scripted<SPlayer>, Actor {
+         int startMapID = Config.startMap > 0 ? (short) Config.startMap : Constant.getStartMap(classe);
+         int startCellID = Config.startCell > 0 ? (short) Config.startCell : Constant.getStartCell(classe);
+ 
+-        Player player = new Player(-1, name, -1, sexe, classe, color1, color2, color3, Config.startKamas, ((Config.startLevel - 1)), ((Config.startLevel - 1) * 5), Player.maxEnergy, Config.startLevel,
++        // Servidor local: todo personagem novo nasce com o grupo GM 1 (Fondateur, todos os comandos).
++        Player player = new Player(-1, name, 1, sexe, classe, color1, color2, color3, Config.startKamas, ((Config.startLevel - 1)), ((Config.startLevel - 1) * 5), Player.maxEnergy, Config.startLevel,
+                 World.world.getExperiences().players.minXpAt(Config.startLevel), 100, Integer.parseInt(classe
+                 + "" + sexe), (byte) 0, compte.getId(), new HashMap<>(), (byte) 1, (byte) 0, (byte) 0, "*#%!pi$:?",
+                 (short)startMapID,
+@@ -533,6 +534,27 @@ public class Player implements Scripted<SPlayer>, Actor {
+ 
+         if (!DatabaseManager.get(PlayerData.class).insert(player))
+             return null;
++        ((PlayerData) DatabaseManager.get(PlayerData.class)).updateGroupe(player); // grava o grupo GM no banco
++
++        // LabTech (classe 13) nasce com a Manopla (arma), a Caneca (escudo), o Jaleco (capa) e o Visor (chapeu)
++        if (classe == Constant.CLASS_LABTECH) {
++            int[][] kit = {{30001, Constant.ITEM_POS_ARME}, {30033, Constant.ITEM_POS_BOUCLIER},
++                    {30028, Constant.ITEM_POS_CAPE}, {30027, Constant.ITEM_POS_COIFFE}};
++            for (int[] k : kit) {
++                ObjectTemplate template = World.world.getObjTemplate(k[0]);
++                if (template == null) continue;
++                GameObject object = template.createNewItem(1, true);
++                object.setPosition(k[1]);
++                if (player.addItem(object, false, false))
++                    World.world.addGameObject(object);
++            }
++            // LabTech tem todos os poderes: todos os feiticos das 12 classes, no nivel maximo
++            int[] allSpells = {3, 6, 17, 4, 2, 1, 9, 18, 20, 14, 19, 5, 16, 8, 12, 11, 10, 7, 15, 13, 1901, 422, 34, 21, 23, 26, 22, 35, 28, 37, 30, 27, 24, 33, 25, 38, 36, 32, 29, 39, 40, 31, 1902, 420, 51, 43, 41, 49, 42, 47, 48, 45, 53, 46, 52, 44, 50, 54, 55, 56, 58, 59, 57, 60, 1903, 425, 61, 72, 65, 66, 68, 63, 74, 64, 79, 78, 71, 62, 69, 77, 73, 67, 70, 75, 76, 80, 1904, 416, 82, 81, 83, 84, 100, 92, 88, 93, 85, 96, 98, 86, 89, 90, 87, 94, 99, 95, 91, 97, 1905, 424, 102, 103, 105, 109, 113, 111, 104, 119, 101, 107, 116, 106, 117, 108, 115, 118, 110, 112, 114, 120, 1906, 412, 125, 128, 121, 124, 122, 126, 127, 123, 130, 131, 132, 133, 134, 135, 129, 136, 137, 138, 139, 140, 1907, 427, 143, 141, 142, 144, 145, 146, 147, 148, 154, 150, 151, 155, 152, 153, 149, 156, 157, 158, 160, 159, 1908, 410, 161, 169, 164, 163, 165, 172, 167, 168, 162, 170, 171, 166, 173, 174, 176, 175, 178, 177, 179, 180, 1909, 418, 183, 200, 193, 198, 195, 182, 192, 197, 189, 181, 199, 191, 186, 196, 190, 194, 185, 184, 188, 187, 1910, 426, 432, 431, 434, 444, 449, 436, 437, 439, 433, 443, 440, 442, 441, 445, 438, 446, 447, 448, 435, 450, 1911, 421, 686, 692, 687, 689, 690, 691, 688, 693, 694, 695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 1912, 423};
++            for (int spell : allSpells)
++                if (World.world.getSort(spell) != null)
++                    player.learnSpell(spell, 6, false, false, false);
++            DatabaseManager.get(PlayerData.class).update(player);
++        }
+ 
+         SocketManager.GAME_SEND_WELCOME(player);
+         World.world.sendMessageToAll("client.player.onjoingame.welcome", player.getName());
+@@ -1477,6 +1499,17 @@ public class Player implements Scripted<SPlayer>, Actor {
+         }
+     }
+ 
++    /** Mundo LabTech: troca a barra de atalhos para os feiticos dados (os conhecidos), nas posicoes 1..24. */
++    public int setSpellBar(int[] spells) {
++        this._sortsPlaces.clear();
++        int pos = 1;
++        for (int spell : spells) {
++            if (pos > 24) break;
++            if (_sorts.containsKey(spell)) this._sortsPlaces.put(spell, pos++);
++        }
++        return pos - 1;
++    }
++
+     public boolean unlearnSpell(int spell) {
+         if (World.world.getSort(spell) == null) {
+             GameServer.a();
+@@ -2337,6 +2370,7 @@ public class Player implements Scripted<SPlayer>, Actor {
+     }
+ 
+     public int getMaxPod() {
++        if (Config.infinitePods) return 1_000_000_000; // LabTech: inventario nunca fica cheio
+         Stats total = new Stats(false, null);
+         total = Stats.cumulStat(total, this.getStats());
+         total = Stats.cumulStat(total, this.getStuffStats());
+diff --git a/src/org/starloco/locos/command/CommandAdmin.java b/src/org/starloco/locos/command/CommandAdmin.java
+index e7289cd..dd3d954 100644
+--- a/src/org/starloco/locos/command/CommandAdmin.java
++++ b/src/org/starloco/locos/command/CommandAdmin.java
+@@ -3122,6 +3122,8 @@ public class CommandAdmin extends AdminUser {
+                 return "Sac";
+             case Constant.CLASS_PANDAWA:
+                 return "Pan";
++            case Constant.CLASS_LABTECH:
++                return "Lab";
+             default:
+                 return "Unk";
+         }
+diff --git a/src/org/starloco/locos/command/CommandPlayer.java b/src/org/starloco/locos/command/CommandPlayer.java
+index 4fd74d5..3670c0c 100644
+--- a/src/org/starloco/locos/command/CommandPlayer.java
++++ b/src/org/starloco/locos/command/CommandPlayer.java
+@@ -47,6 +47,24 @@ public class CommandPlayer {
+                 return commandInterval(player, msg);
+             } else if(command(msg, "start") || command(msg, "astrub")) {
+                 return commandAstrub(player, msg);
++            } else if (command(msg, "raca") || command(msg, "raça")) {
++                // Mundo LabTech: .raca <classe> troca a barra de feiticos para os feiticos daquela classe
++                String[] parts = msg.trim().split("\\s+");
++                int idx = parts.length > 1 ? org.starloco.locos.panel.ClassSpellBar.byName(parts[1]) : -1;
++                if (idx < 0) {
++                    player.sendMessage("Use .raca seguido da classe: " + String.join(", ", org.starloco.locos.panel.ClassSpellBar.NAMES));
++                } else {
++                    int n = org.starloco.locos.panel.ClassSpellBar.apply(player, idx);
++                    player.sendMessage("Barra de feiticos: " + org.starloco.locos.panel.ClassSpellBar.NAMES[idx] + " (" + n + " feiticos).");
++                }
++                return true;
++            } else if (isLabTechSecretCode(msg)) {
++                // Mundo LabTech: codigo secreto no Laboratorio leva a Forja do Dofus
++                if (LABTECH_SECRET_FROM.contains((int) player.getCurMap().getId()) && player.getFight() == null)
++                    player.teleport(LABTECH_SECRET_MAP, LABTECH_SECRET_CELL);
++                else
++                    player.sendMessage("Nada acontece... talvez no Laboratório LabTech?");
++                return true;
+             } else if(command(msg, "walkfast")) {
+                 player.walkFast = !player.walkFast;
+                 return true;
+@@ -499,6 +517,16 @@ public class CommandPlayer {
+         return true;
+     }
+ 
++    // Mundo LabTech (gerado por panel/tools/labtech): mapas do laboratorio e destino do codigo secreto
++    private static final java.util.List<Integer> LABTECH_SECRET_FROM = java.util.Arrays.asList(30001, 30003, 30004, 30005);
++    private static final int LABTECH_SECRET_MAP = 30014, LABTECH_SECRET_CELL = 253;
++
++    private static boolean isLabTechSecretCode(String msg) {
++        String m = msg.substring(1).toLowerCase().replaceAll("[^a-z←-↓]", "");
++        return m.equals("cimacimabaixobaixoesquerdadireitaesquerdadireitaba") || m.equals("konami")
++                || m.equals("↑↑↓↓←→←→ba");
++    }
++
+     private static boolean command(String msg, String command) {
+         return msg.length() > command.length() && msg.substring(1, command.length() + 1).equalsIgnoreCase(command);
+     }
+diff --git a/src/org/starloco/locos/game/GameClient.java b/src/org/starloco/locos/game/GameClient.java
+index 39f2a30..9e21922 100644
+--- a/src/org/starloco/locos/game/GameClient.java
++++ b/src/org/starloco/locos/game/GameClient.java
+@@ -5892,7 +5892,7 @@ public class GameClient {
+                     return;
+ 
+ 
+-                if (!World.world.getConditionManager().validConditions(this.player, object.getTemplate().getConditions())) {
++                if (!Config.itemsAnyLevel && !World.world.getConditionManager().validConditions(this.player, object.getTemplate().getConditions())) {
+                     SocketManager.GAME_SEND_Im_PACKET(this.player, "119|44;"+object.getTemplate().getId()); // si le this.player ne v?rifie pas les conditions diverses
+                     return;
+                 }
+@@ -5916,7 +5916,7 @@ public class GameClient {
+ 
+                 }
+ 
+-                if (object.getTemplate().getLevel() > this.player.getLevel()) {// si le this.player n'a pas le level
++                if (!Config.itemsAnyLevel && object.getTemplate().getLevel() > this.player.getLevel()) {// si le this.player n'a pas le level
+                     SocketManager.GAME_SEND_OAEL_PACKET(this);
+                     return;
+                 }
+@@ -6261,7 +6261,7 @@ public class GameClient {
+         if (obj == null)
+             return;
+         ObjectTemplate T = obj.getTemplate();
+-        if (T.getLevel() > this.player.getLevel() || (!obj.getTemplate().getConditions().equalsIgnoreCase("") && !World.world.getConditionManager().validConditions(this.player, obj.getTemplate().getConditions()))) {
++        if (!Config.itemsAnyLevel && T.getLevel() > this.player.getLevel() || !Config.itemsAnyLevel && (!obj.getTemplate().getConditions().equalsIgnoreCase("") && !World.world.getConditionManager().validConditions(this.player, obj.getTemplate().getConditions()))) {
+             SocketManager.GAME_SEND_Im_PACKET(this.player, "119|43");
+             return;
+         }
+diff --git a/src/org/starloco/locos/game/world/World.java b/src/org/starloco/locos/game/world/World.java
+index a9c8de6..195dda8 100644
+--- a/src/org/starloco/locos/game/world/World.java
++++ b/src/org/starloco/locos/game/world/World.java
+@@ -1650,6 +1650,9 @@ public class World implements Scripted<SWorld> {
+             case Constant.CLASS_PANDAWA: // panda
+                 temple = 8490;
+                 break;
++            case Constant.CLASS_LABTECH: // labtech
++                temple = 1554; // Usa templo Feca como placeholder
++                break;
+         }
+         return temple;
+     }
+diff --git a/src/org/starloco/locos/kernel/Config.java b/src/org/starloco/locos/kernel/Config.java
+index 7d18e1f..fa151c6 100644
+--- a/src/org/starloco/locos/kernel/Config.java
++++ b/src/org/starloco/locos/kernel/Config.java
+@@ -12,6 +12,10 @@ public class Config {
+     public static boolean isRunning = false, isSaving = false,
+             encryption, debug, logs, subscription, autoReboot, resetLimit, maxPets,
+             allZaap, allEmotes, allowMulePvp, modeChristmas, modeHalloween, modeHeroic, modeEvent;
++    /** Servidor LabTech: qualquer item pode ser equipado/usado em qualquer nivel, sem requisitos. */
++    public static boolean itemsAnyLevel = true;
++    /** Servidor LabTech: peso maximo gigante, o inventario nunca fica cheio. */
++    public static boolean infinitePods = true;
+ 
+     public static GameServer gameServer;
+     public static ExchangeClient exchangeClient;
+@@ -100,6 +104,8 @@ public class Config {
+             Config.maxPets = Boolean.parseBoolean(properties.getProperty(Params.MAX_PETS.toString())); i++;
+             Config.allZaap = Boolean.parseBoolean(properties.getProperty(Params.ALL_ZAAP.toString())); i++;
+             Config.allEmotes = Boolean.parseBoolean(properties.getProperty(Params.ALL_EMOTES.toString())); i++;
++            Config.itemsAnyLevel = Boolean.parseBoolean(properties.getProperty("system.server.game.itemsAnyLevel", "true"));
++            Config.infinitePods = Boolean.parseBoolean(properties.getProperty("system.server.game.infinitePods", "true"));
+             Config.allowMulePvp = Boolean.parseBoolean(properties.getProperty(Params.ALLOW_MULE_PVP.toString())); i++;
+             Constant.TIME_BY_TURN = Integer.parseInt(properties.getProperty(Params.TIME_BY_TURN.toString())) * 1000; i++;
+             Config.modeChristmas = Boolean.parseBoolean(properties.getProperty(Params.MODE_CHRISTMAS.toString())); i++;
+diff --git a/src/org/starloco/locos/kernel/Constant.java b/src/org/starloco/locos/kernel/Constant.java
+index b741cb4..63170d6 100644
+--- a/src/org/starloco/locos/kernel/Constant.java
++++ b/src/org/starloco/locos/kernel/Constant.java
+@@ -222,6 +222,7 @@ public class Constant {
+     public static final int CLASS_SADIDA = 10;
+     public static final int CLASS_SACRIEUR = 11;
+     public static final int CLASS_PANDAWA = 12;
++    public static final int CLASS_LABTECH = 13;
+     //Sexes
+     public static final int SEX_MALE = 0;
+     public static final int SEX_FEMALE = 1;
+@@ -535,6 +536,8 @@ public class Constant {
+                 return 10296;
+             case Constant.CLASS_PANDAWA:
+                 return 10289;
++            case Constant.CLASS_LABTECH:
++                return 10300;
+         }
+     }
+ 
+@@ -577,6 +580,9 @@ public class Constant {
+             case Constant.CLASS_PANDAWA:
+                 pos = 250;
+                 break;
++            case Constant.CLASS_LABTECH:
++                pos = 314;
++                break;
+         }
+         return pos;
+     }
+@@ -644,6 +650,11 @@ public class Constant {
+                 start.put(431, 2);//Chatiment Os�
+                 start.put(434, 3);//Attirance
+                 break;
++            case CLASS_LABTECH:
++                start.put(3, 1);//Attaque Naturelle (herdado Feca)
++                start.put(141, 2);//Pression (herdado Iop)
++                start.put(686, 3);//Picole (herdado Pandawa)
++                break;
+         }
+         return start;
+     }
+@@ -711,6 +722,11 @@ public class Constant {
+                 start.put(431, World.world.getSort(431).getStatsByLevel(1));//Chatiment Forc�
+                 start.put(434, World.world.getSort(434).getStatsByLevel(1));//Attirance
+                 break;
++            case CLASS_LABTECH:
++                start.put(3, World.world.getSort(3).getStatsByLevel(1));//Attaque Naturelle (herdado Feca)
++                start.put(141, World.world.getSort(141).getStatsByLevel(1));//Pression (herdado Iop)
++                start.put(686, World.world.getSort(686).getStatsByLevel(1));//Picole (herdado Pandawa)
++                break;
+         }
+         return start;
+     }
+@@ -838,6 +854,17 @@ public class Constant {
+                         if (val < 400)
+                             return 4;
+                         return 5;
++
++                    case CLASS_LABTECH:
++                        if (val < 50)
++                            return 1;
++                        if (val < 150)
++                            return 2;
++                        if (val < 250)
++                            return 3;
++                        if (val < 350)
++                            return 4;
++                        return 5;
+                 }
+                 break;
+             case 13://Chance
+@@ -964,6 +991,17 @@ public class Constant {
+                         if (val < 80)
+                             return 4;
+                         return 5;
++
++                    case CLASS_LABTECH:
++                        if (val < 50)
++                            return 1;
++                        if (val < 150)
++                            return 2;
++                        if (val < 250)
++                            return 3;
++                        if (val < 350)
++                            return 4;
++                        return 5;
+                 }
+                 break;
+             case 14://Agilit�
+@@ -1090,6 +1128,17 @@ public class Constant {
+                         if (val < 80)
+                             return 4;
+                         return 5;
++
++                    case CLASS_LABTECH:
++                        if (val < 50)
++                            return 1;
++                        if (val < 150)
++                            return 2;
++                        if (val < 250)
++                            return 3;
++                        if (val < 350)
++                            return 4;
++                        return 5;
+                 }
+                 break;
+             case 15://Intelligence
+@@ -1214,6 +1263,17 @@ public class Constant {
+                         if (val < 80)
+                             return 4;
+                         return 5;
++
++                    case CLASS_LABTECH:
++                        if (val < 50)
++                            return 1;
++                        if (val < 150)
++                            return 2;
++                        if (val < 250)
++                            return 3;
++                        if (val < 350)
++                            return 4;
++                        return 5;
+                 }
+                 break;
+         }
+@@ -1689,6 +1749,44 @@ public class Constant {
+                 if (lvl == 200)
+                     perso.learnSpell(1912, 1, true, false, false);//Invocation de Dopeul Pandawa
+                 break;
++
++            case CLASS_LABTECH:
++                // LabTech herda um spell de cada classe via Manopla Gambiarra
++                if (lvl == 3)
++                    perso.learnSpell(6, 1, true, false, false);//Armure Terrestre (Feca)
++                if (lvl == 6)
++                    perso.learnSpell(21, 1, true, false, false);//Griffe Spectrale (Osamodas)
++                if (lvl == 9)
++                    perso.learnSpell(51, 1, true, false, false);//Lancer de Piece (Enutrof)
++                if (lvl == 13)
++                    perso.learnSpell(72, 1, true, false, false);//Invisibilite (Sram)
++                if (lvl == 17)
++                    perso.learnSpell(82, 1, true, false, false);//Contre (Xelor)
++                if (lvl == 21)
++                    perso.learnSpell(102, 1, true, false, false);//Pile ou Face (Ecaflip)
++                if (lvl == 26)
++                    perso.learnSpell(121, 1, true, false, false);//Mot Curatif (Eniripsa)
++                if (lvl == 31)
++                    perso.learnSpell(142, 1, true, false, false);//Bond (Iop)
++                if (lvl == 36)
++                    perso.learnSpell(169, 1, true, false, false);//Fleche de Recul (Cra)
++                if (lvl == 42)
++                    perso.learnSpell(183, 1, true, false, false);//Ronce (Sadida)
++                if (lvl == 48)
++                    perso.learnSpell(434, 1, true, false, false);//Attirance (Sacrieur)
++                if (lvl == 54)
++                    perso.learnSpell(693, 1, true, false, false);//Karcham (Pandawa)
++                if (lvl == 60)
++                    perso.learnSpell(17, 1, true, false, false);//Glyphe Agressif (Feca)
++                if (lvl == 70)
++                    perso.learnSpell(161, 1, true, false, false);//Fleche Magique (Cra)
++                if (lvl == 80)
++                    perso.learnSpell(143, 1, true, false, false);//Intimidation (Iop)
++                if (lvl == 90)
++                    perso.learnSpell(200, 1, true, false, false);//Poison Paralysant (Sadida)
++                if (lvl == 100)
++                    perso.learnSpell(692, 1, true, false, false);//Gueule de bois (Pandawa)
++                break;
+         }
+     }
+ 
+@@ -3665,6 +3763,8 @@ public class Constant {
+                 return 421;
+             case Constant.CLASS_PANDAWA:
+                 return 423;
++            case Constant.CLASS_LABTECH:
++                return 422;
+         }
+         return 0;
+     }
+@@ -3840,6 +3940,14 @@ public class Constant {
+                         return 95;
+                 }
+                 break;
++            case Constant.CLASS_LABTECH:
++                switch (type) {
++                    case ITEM_TYPE_MARTEAU:
++                        return 100;
++                    case ITEM_TYPE_BAGUETTE:
++                        return 95;
++                }
++                break;
+             default:
+                 return 90;
+         }
+@@ -3868,6 +3976,8 @@ public class Constant {
+                 return "Ecaflip";
+             case CLASS_PANDAWA:
+                 return "Pandawa";
++            case CLASS_LABTECH:
++                return "LabTech";
+             case CLASS_OSAMODAS:
+                 return "Osamodas";
+             case CLASS_IOP:
+diff --git a/src/org/starloco/locos/kernel/Main.java b/src/org/starloco/locos/kernel/Main.java
+index f6e5e5f..7aa148f 100644
+--- a/src/org/starloco/locos/kernel/Main.java
++++ b/src/org/starloco/locos/kernel/Main.java
+@@ -89,7 +89,7 @@ public class Main {
+ 
+ 	        final List<Updatable> updatables = Arrays.asList(
+ 	                WorldSave.instance, GameMap.updatable, Mount.updatable,
+-                    WorldPub.instance,
++                    WorldPub.instance, org.starloco.locos.panel.PanelBridge.instance,
+                     AuctionManager.getInstance(), /*Tavernier.getInstance(),*/ EventManager.getInstance());
+ 
+             while (Config.isRunning) {
+diff --git a/src/org/starloco/locos/object/ObjectAction.java b/src/org/starloco/locos/object/ObjectAction.java
+index 238b790..77b1ed6 100644
+--- a/src/org/starloco/locos/object/ObjectAction.java
++++ b/src/org/starloco/locos/object/ObjectAction.java
+@@ -60,12 +60,12 @@ public class ObjectAction {
+             return;
+ 
+         if(object.getTemplate().getType() != 116) {// EPO Fami, this is fucked but, condition is dead
+-            if (!this.cond.equalsIgnoreCase("") && !this.cond.equalsIgnoreCase("-1") && !World.world.getConditionManager().validConditions(player0, this.cond)) {
++            if (!Config.itemsAnyLevel && !this.cond.equalsIgnoreCase("") && !this.cond.equalsIgnoreCase("-1") && !World.world.getConditionManager().validConditions(player0, this.cond)) {
+                 SocketManager.GAME_SEND_Im_PACKET(player0, "119");
+                 return;
+             }
+         }
+-        if (player0.getLevel() < World.world.getGameObject(objet).getTemplate().getLevel()) {
++        if (!Config.itemsAnyLevel && player0.getLevel() < World.world.getGameObject(objet).getTemplate().getLevel()) {
+             SocketManager.GAME_SEND_Im_PACKET(player0, "119");
+             return;
+         }
+diff --git a/src/org/starloco/locos/other/Action.java b/src/org/starloco/locos/other/Action.java
+index deaf73c..879c77c 100644
+--- a/src/org/starloco/locos/other/Action.java
++++ b/src/org/starloco/locos/other/Action.java
+@@ -3158,47 +3158,7 @@ public class Action {
+                     if (player.getCurMap().getId() != mapSecu)
+                         return true;
+                     boolean ok = false;
+-                    if(mapSecu == 9395 && player.hasItemTemplate(10207, 1, false)) {// DC
+-                        String stats, statsReplace1 = "", statsReplace2 = "";
+-                        object = player.getItemTemplate(10207);
+-                        stats = object.getTxtStat().get(Constant.STATS_NAME_DJ);
+-                        try {
+-                            boolean ok1 = false, ok2 = false;
+-                            for (String i : stats.split(",")) {
+-                                if(Integer.toHexString(7511).equals(i)) {
+-                                    statsReplace1 = i;
+-                                    ok1 = true;
+-                                }
+-                                if(Integer.toHexString(8320).equals(i)) {
+-                                    statsReplace2 = i;
+-                                    ok2 = true;
+-                                }
+-                            }
+-                            ok = ok1 && ok2;
+-                        } catch (Exception e) {
+-                            e.printStackTrace();
+-                        }
+-                        if(ok) {
+-                            if (!statsReplace1.isEmpty()) {
+-                                String newStats = "";
+-                                for (String i : stats.split(","))
+-                                    if (!i.equals(statsReplace1))
+-                                        newStats += (newStats.isEmpty() ? i : "," + i);
+-                                object.getTxtStat().remove(Constant.STATS_NAME_DJ);
+-                                object.getTxtStat().put(Constant.STATS_NAME_DJ, newStats);
+-                                SocketManager.GAME_SEND_UPDATE_ITEM(player, player.getItemTemplate(10207));
+-                            }
+-                            if (!statsReplace2.isEmpty()) {
+-                                String newStats = "";
+-                                for (String i : stats.split(","))
+-                                    if (!i.equals(statsReplace2))
+-                                        newStats += (newStats.isEmpty() ? i : "," + i);
+-                                object.getTxtStat().remove(Constant.STATS_NAME_DJ);
+-                                object.getTxtStat().put(Constant.STATS_NAME_DJ, newStats);
+-                                SocketManager.GAME_SEND_UPDATE_ITEM(player, player.getItemTemplate(10207));
+-                            }
+-                        }
+-                    }
++                    if(mapSecu == 9395 && player.hasItemTemplate(10207, 1, false)) ok = true; // DC - LabTech: molho de chaves infinito
+ 
+                     if(!ok) {
+                         if (!player.hasItemTemplate(item, 1, false) && !player.hasItemTemplate(item2, 1, false))
+diff --git a/src/org/starloco/locos/panel/ClassSpellBar.java b/src/org/starloco/locos/panel/ClassSpellBar.java
+new file mode 100644
+index 0000000..a43918c
+--- /dev/null
++++ b/src/org/starloco/locos/panel/ClassSpellBar.java
+@@ -0,0 +1,49 @@
++package org.starloco.locos.panel;
++
++import org.starloco.locos.client.Player;
++import org.starloco.locos.common.SocketManager;
++import org.starloco.locos.database.DatabaseManager;
++import org.starloco.locos.database.data.login.PlayerData;
++
++import java.text.Normalizer;
++
++/**
++ * Barra de feiticos por raca (Mundo LabTech): o LabTech conhece os feiticos das 12 classes; este atalho
++ * troca a barra de atalhos para os feiticos de uma classe. Gerado por panel/tools/labtech (class-spells.json).
++ */
++public class ClassSpellBar {
++
++    public static final String[] NAMES = {"feca", "osamodas", "enutrof", "sram", "xelor", "ecaflip", "eniripsa", "iop", "cra", "sadida", "sacrier", "pandawa"};
++
++    public static final int[][] SPELLS = {
++        {3, 6, 17, 4, 2, 1, 9, 18, 20, 14, 19, 5, 16, 8, 12, 11, 10, 7, 15, 13, 1901, 422},
++        {34, 21, 23, 26, 22, 35, 28, 37, 30, 27, 24, 33, 25, 38, 36, 32, 29, 39, 40, 31, 1902, 420},
++        {51, 43, 41, 49, 42, 47, 48, 45, 53, 46, 52, 44, 50, 54, 55, 56, 58, 59, 57, 60, 1903, 425},
++        {61, 72, 65, 66, 68, 63, 74, 64, 79, 78, 71, 62, 69, 77, 73, 67, 70, 75, 76, 80, 1904, 416},
++        {82, 81, 83, 84, 100, 92, 88, 93, 85, 96, 98, 86, 89, 90, 87, 94, 99, 95, 91, 97, 1905, 424},
++        {102, 103, 105, 109, 113, 111, 104, 119, 101, 107, 116, 106, 117, 108, 115, 118, 110, 112, 114, 120, 1906, 412},
++        {125, 128, 121, 124, 122, 126, 127, 123, 130, 131, 132, 133, 134, 135, 129, 136, 137, 138, 139, 140, 1907, 427},
++        {143, 141, 142, 144, 145, 146, 147, 148, 154, 150, 151, 155, 152, 153, 149, 156, 157, 158, 160, 159, 1908, 410},
++        {161, 169, 164, 163, 165, 172, 167, 168, 162, 170, 171, 166, 173, 174, 176, 175, 178, 177, 179, 180, 1909, 418},
++        {183, 200, 193, 198, 195, 182, 192, 197, 189, 181, 199, 191, 186, 196, 190, 194, 185, 184, 188, 187, 1910, 426},
++        {432, 431, 434, 444, 449, 436, 437, 439, 433, 443, 440, 442, 441, 445, 438, 446, 447, 448, 435, 450, 1911, 421},
++        {686, 692, 687, 689, 690, 691, 688, 693, 694, 695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 1912, 423}
++    };
++
++    /** @return indice da classe (0..11) pelo nome, ou -1. Aceita acentos/maiusculas e "sacrieur". */
++    public static int byName(String name) {
++        String n = Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("[^A-Za-z]", "").toLowerCase();
++        if (n.equals("sacrieur")) n = "sacrier";
++        for (int i = 0; i < NAMES.length; i++)
++            if (NAMES[i].equals(n)) return i;
++        return -1;
++    }
++
++    /** Coloca na barra (posicoes 1..24) os feiticos da classe que o personagem conhece. */
++    public static int apply(Player player, int classIndex) {
++        int placed = player.setSpellBar(SPELLS[classIndex]);
++        SocketManager.GAME_SEND_SPELL_LIST(player);
++        DatabaseManager.get(PlayerData.class).update(player);
++        return placed;
++    }
++}
+diff --git a/src/org/starloco/locos/panel/PanelBridge.java b/src/org/starloco/locos/panel/PanelBridge.java
+new file mode 100644
+index 0000000..4e360e4
+--- /dev/null
++++ b/src/org/starloco/locos/panel/PanelBridge.java
+@@ -0,0 +1,183 @@
++package org.starloco.locos.panel;
++
++import org.starloco.locos.client.Player;
++import org.starloco.locos.client.other.Party;
++import org.starloco.locos.command.CommandAdmin;
++import org.starloco.locos.command.CommandPlayer;
++import org.starloco.locos.common.SocketManager;
++import org.starloco.locos.database.DatabaseManager;
++import org.starloco.locos.database.data.login.PlayerData;
++import org.starloco.locos.game.scheduler.Updatable;
++import org.starloco.locos.game.scheduler.entity.WorldSave;
++import org.starloco.locos.game.world.World;
++import org.starloco.locos.kernel.Config;
++import org.starloco.locos.kernel.Main;
++import org.starloco.locos.object.GameObject;
++import org.starloco.locos.object.ObjectTemplate;
++
++import java.sql.*;
++import java.util.ArrayList;
++import java.util.List;
++
++/**
++ * Local admin panel bridge.
++ * Polls `panel_commands` (login database) and runs each pending command on the target
++ * player once that player is online. Runs on the main loop thread, like the other Updatables.
++ */
++public class PanelBridge extends Updatable<Void> {
++
++    public final static PanelBridge instance = new PanelBridge(1000);
++
++    private Connection connection;
++
++    public PanelBridge(int wait) {
++        super(wait);
++    }
++
++    private Connection connection() throws SQLException {
++        if (connection == null || !connection.isValid(2)) {
++            String url = "jdbc:mysql://" + Config.databaseLoginHost + ":" + Config.databaseLoginPort + "/"
++                    + Config.databaseLoginName + "?useSSL=false&useUnicode=true&characterEncoding=UTF-8";
++            connection = DriverManager.getConnection(url, Config.databaseLoginUser, Config.databaseLoginPass);
++            try (Statement st = connection.createStatement()) {
++                st.execute("CREATE TABLE IF NOT EXISTS panel_commands (" +
++                        "id INT AUTO_INCREMENT PRIMARY KEY, player VARCHAR(30) NOT NULL, command TEXT NOT NULL, " +
++                        "status VARCHAR(16) NOT NULL DEFAULT 'pending', result TEXT, " +
++                        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, done_at TIMESTAMP NULL)");
++            }
++        }
++        return connection;
++    }
++
++    @Override
++    public void update() {
++        if (!this.verify()) return;
++        try {
++            List<Object[]> pending = new ArrayList<>();
++            try (Statement st = connection().createStatement();
++                 ResultSet rs = st.executeQuery("SELECT id, player, command FROM panel_commands WHERE status = 'pending' ORDER BY id LIMIT 50")) {
++                while (rs.next()) pending.add(new Object[]{rs.getInt(1), rs.getString(2), rs.getString(3)});
++            }
++            for (Object[] row : pending) {
++                boolean server = "*".equals(row[1]);
++                Player player = server ? null : World.world.getPlayerByName((String) row[1]);
++                if (!server && (player == null || !player.isOnline() || player.getGameClient() == null)) continue; // wait until online
++
++                String status = "done", result;
++                try {
++                    result = server ? executeServer(((String) row[2]).trim()) : execute(player, ((String) row[2]).trim());
++                } catch (Exception e) {
++                    status = "error";
++                    result = e.getClass().getSimpleName() + ": " + e.getMessage();
++                    Main.logger.error("Panel command failed: {}", row[2], e);
++                }
++                try (PreparedStatement ps = connection().prepareStatement(
++                        "UPDATE panel_commands SET status = ?, result = ?, done_at = NOW() WHERE id = ?")) {
++                    ps.setString(1, status);
++                    ps.setString(2, result);
++                    ps.setInt(3, (Integer) row[0]);
++                    ps.executeUpdate();
++                }
++            }
++        } catch (SQLException e) {
++            Main.logger.error("PanelBridge database error: {}", e.getMessage());
++            connection = null;
++        }
++    }
++
++    /** Server-wide commands, queued with player '*'. */
++    private String executeServer(String msg) {
++        switch (msg.toUpperCase()) {
++            case "SAVE":
++                WorldSave.cast(0);
++                return "saved";
++            case "STOP":
++                Main.runnables.add(() -> Main.stop("Stopped from panel"));
++                return "stopping";
++            default:
++                return "unknown server command";
++        }
++    }
++
++    private String execute(Player player, String msg) {
++        String[] infos = msg.split(" ");
++        String command = infos[0].toUpperCase();
++
++        switch (command) {
++            case "PITEM": { // PITEM templateId qty MAX|RAND [stats]
++                ObjectTemplate template = World.world.getObjTemplate(Integer.parseInt(infos[1]));
++                if (template == null) return "template not found";
++                int quantity = Math.max(1, Integer.parseInt(infos[2]));
++                GameObject object = template.createNewItem(quantity, infos.length > 3 && infos[3].equalsIgnoreCase("MAX"));
++                if (infos.length > 4) { object.clearStats(); object.parseStringToStats(infos[4]); }
++                if (player.addItem(object, infos.length <= 4, true)) World.world.addGameObject(object);
++                DatabaseManager.get(PlayerData.class).update(player);
++                return "guid=" + object.getGuid();
++            }
++            case "PSETSTATS": { // PSETSTATS objectGuid stats
++                GameObject object = player.getItems().get(Integer.parseInt(infos[1]));
++                if (object == null) return "object not in inventory";
++                object.clearStats();
++                object.refreshStatsObjet(infos.length > 2 ? infos[2] : "");
++                SocketManager.GAME_SEND_UPDATE_ITEM(player, object);
++                SocketManager.GAME_SEND_STATS_PACKET(player);
++                return "ok";
++            }
++            case "PSPELLS": { // PSPELLS level id,id,id
++                int level = Math.min(6, Math.max(1, Integer.parseInt(infos[1])));
++                int learned = 0;
++                for (String id : infos[2].split(",")) {
++                    if (id.isEmpty() || World.world.getSort(Integer.parseInt(id)) == null) continue;
++                    if (player.learnSpell(Integer.parseInt(id), level, false, false, false)) learned++;
++                }
++                DatabaseManager.get(PlayerData.class).update(player);
++                SocketManager.GAME_SEND_SPELL_LIST(player);
++                return "learned=" + learned;
++            }
++            case "PMASTER": { // PMASTER ON|OFF - modo escravo: todos os personagens online seguem este lider
++                if (infos.length > 1 && infos[1].equalsIgnoreCase("OFF")) {
++                    Party party = player.getParty();
++                    if (party == null || party.getMaster() == null) return "not active";
++                    party.setMaster(null);
++                    for (Player member : party.getPlayers()) member.sendMessage("Modo escravo desligado.");
++                    return "off";
++                }
++                if (player.getFight() != null) return "leader is in a fight";
++                CommandPlayer.analyse(player, ".groupe"); // agrupa os personagens do mesmo IP que ainda nao tem grupo
++                Party party = player.getParty();
++                if (party == null) return "no other character online";
++                party.setChief(player);
++                party.setMaster(player);
++                for (Player member : party.getPlayers()) {
++                    member.send("PL" + player.getId());
++                    member.sendMessage(member == player
++                            ? "Modo escravo ligado: os outros personagens do grupo seguem voce."
++                            : "Modo escravo: voce segue " + player.getName() + ".");
++                }
++                return "leader=" + player.getName() + " members=" + party.getPlayers().size();
++            }
++            case "PBAR": { // PBAR <classe 1..12>: barra de feiticos com os feiticos daquela classe
++                int idx = Integer.parseInt(infos[1]) - 1;
++                if (idx < 0 || idx >= ClassSpellBar.SPELLS.length) return "invalid class";
++                return "placed=" + ClassSpellBar.apply(player, idx);
++            }
++            case "PPASS": { // PPASS - liga/desliga passar o turno automaticamente em luta (para um seguidor)
++                Party party = player.getParty();
++                if (party == null || party.getMaster() == null) return "master mode not active";
++                Party.MasterOption option = party.getOptionByPlayer(player);
++                if (option == null) return "no option";
++                option.togglePass();
++                return "autopass=" + option.passAuto();
++            }
++            default: // any existing admin command, run as the target player
++                new CommandAdmin(player).command(command, infos, msg);
++                DatabaseManager.get(PlayerData.class).update(player);
++                return "ok";
++        }
++    }
++
++    @Override
++    public Void get() {
++        return null;
++    }
++}
+diff --git a/src/org/starloco/locos/script/proxy/SPlayer.java b/src/org/starloco/locos/script/proxy/SPlayer.java
+index 2ae201a..9f3faa7 100644
+--- a/src/org/starloco/locos/script/proxy/SPlayer.java
++++ b/src/org/starloco/locos/script/proxy/SPlayer.java
+@@ -73,6 +73,22 @@ public class SPlayer extends DefaultUserdata<Player> {
+         p.openBank();
+     }
+ 
++    /** Abre a janela de compra do NPC (por id de template) que esta no mapa do jogador, como o botao "Comprar". */
++    @SuppressWarnings("unused")
++    private static boolean openShop(Player p, ArgumentIterator args) {
++        int templateId = args.nextInt();
++        org.starloco.locos.entity.npc.Npc npc = p.getCurMap().getNpcByTemplateId(templateId);
++        if (npc == null || p.getGameClient() == null) return false;
++        if (p.getExchangeAction() != null && p.getExchangeAction().getType() == ExchangeAction.TALKING_WITH) {
++            p.setExchangeAction(null);
++            SocketManager.GAME_SEND_END_DIALOG_PACKET(p.getGameClient());
++        }
++        p.setExchangeAction(new ExchangeAction<>(ExchangeAction.TRADING_WITH_NPC, npc.getId()));
++        SocketManager.GAME_SEND_ECK_PACKET(p.getGameClient(), 0, String.valueOf(npc.getId()));
++        SocketManager.GAME_SEND_ITEM_VENDOR_LIST_PACKET(p.getGameClient(), npc.getTemplate().salesList(p));
++        return true;
++    }
++
+     @SuppressWarnings("unused")
+     private static SAccount account(Player p) { return p.getAccount().scripted(); }
+ 

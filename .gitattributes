@@ -1,0 +1,7 @@
+* text=auto
+# o patch precisa chegar byte a byte (senao o git apply nao encaixa no StarLoco)
+*.patch -text
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary

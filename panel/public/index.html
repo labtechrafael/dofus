@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel Dofus</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Painel Dofus <span class="muted">servidor local</span></div>
+    <div id="statusPills" class="pills"></div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <button data-tab="home" class="active">Início</button>
+    <button data-tab="accounts">Contas</button>
+    <button data-tab="players">Personagens</button>
+    <button data-tab="items">Itens e sets</button>
+    <button data-tab="spells">Feitiços</button>
+    <button data-tab="monsters">Monstros e drops</button>
+    <button data-tab="guide">Guia</button>
+    <button data-tab="queue">Fila e histórico</button>
+  </nav>
+  <main id="main"></main>
+  <div id="toast" class="toast"></div>
+  <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="modalClose">×</button><div id="modalBody"></div></div></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+Coloque aqui o cliente Dofus Retro 1.39.8, numa pasta chamada client-starloco.
+
+O instalador procura por este arquivo:
+  server\client-starloco\resources\app\retroclient\loader.swf
+
+Ou seja, a estrutura final deve ser:
+  server\
+    client-starloco\
+      resources\
+        app\
+          retroclient\
+            Dofus.exe
+            loader.swf
+            config.xml
+            clips\ ...
+            data\ ...
+
+O cliente NAO faz parte deste repositorio (e da Ankama). Use a sua propria copia.
+As pastas game, login e web ao lado sao baixadas pelo instalador (projeto StarLoco).

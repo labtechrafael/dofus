@@ -1,0 +1,26 @@
+# Baixado ou gerado pelo instalador (scripts/instalar.ps1)
+/runtime/
+/server/*
+!/server/COLOQUE_O_CLIENTE_AQUI.txt
+/logs/
+/backup/
+
+# Painel: dependencias e dados locais
+/panel/node_modules/
+/panel/data/panel.db
+/panel/data/lang/
+
+# Gerado a partir do cliente do jogo (arte e dados da Ankama): nunca vai para o repositorio
+/panel/world/labtech/art/gerado/
+/panel/world/labtech/art/classe13/
+/panel/world/labtech/mundo_gerado.json
+
+# Coisas desta maquina
+/Client-Dofus-1-29-master/
+/arc-emu-watch-*/
+*.zip
+/passo a passo.txt
+/labtech_ai_handoff.md
+/panel/tools/labtech/test_make_art.py
+__pycache__/
+*.pyc
