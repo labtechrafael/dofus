@@ -15,10 +15,13 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
 
 ## O que vem no pacote
 
+> Guias completos: **[A Ilha LabTech](docs/ILHA_LABTECH.md)** (mapas, missão, cervejas, NPCs, bar das celebridades, segredos) e **[A classe LabTech](docs/CLASSE_LABTECH.md)** (história, visual, feitiços, kit e todos os itens com atributos).
+
 - **Classe LabTech** (masculino e feminino). Nasce de jaleco e visor, com a Manopla e a caneca de cerveja, e sabe
   os feitiços das 12 classes. No jogo, `.raca iop` (ou outra classe) monta a barra de feitiços daquela raça.
 - **Arquipélago LabTech**: laboratório, praça, cervejaria, oficina, estufa, museu, arena, forja do Dofus
-  Fermentado e o **Bar das Celebridades** (paródias).
+  Fermentado e o **Bar das Celebridades**: 20 famosos em versão paródia, cada um com personagem e retrato próprios
+  e uma história escrachada de onde veio.
 - **Itens próprios**: Manopla Gambiarra Mk I e Mk XII, Caneca da Gambiarra, Drone de IA (familiar), Conjunto
   Jaleco LabTech, cervejas e o Dofus Fermentado.
 - **Mercadores em Bonta e Brâkmar**, ao lado do zaap, que vendem todos os itens do jogo.
@@ -60,8 +63,8 @@ O instalador baixa sozinho, das fontes oficiais:
 
 1. **Baixe este repositório:**
    ```
-   git clone https://github.com/SEU-USUARIO/dofus-labtech.git
-   cd dofus-labtech
+   git clone https://github.com/labtechrafael/dofus.git
+   cd dofus
    ```
 2. **Coloque o cliente do jogo** na pasta `server\client-starloco`. No fim, este arquivo precisa existir:
    ```

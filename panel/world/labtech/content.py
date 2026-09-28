@@ -82,11 +82,11 @@ CORE_LORE = [
 ITEMS = []
 ITEMS.append({'id': 30001, 'type': 7, 'level': 1, 'g': 3001, 'icon': 'manopla', 'name': 'Manopla Gambiarra Mk I',
               'desc': 'Bronze, cobre, doze encaixes vazios e muita fita isolante. Ainda não canaliza poder nenhum, mas já bate bem forte.',
-              'stats': '64#3e8#5dc#0#1d501+999',   # 1000 a 1500 de dano neutro
+              'stats': ','.join(f'{e}#15#23#0#1d15+20' for e in ('61', '63', '62', '60', '5f')) + ',7d#3e8#0#0#0d0+1000',   # dano da Epee Clipse (21-35 x5; o neutro rouba vida) + 1000 de vitalidade
               'weapon': [5, 4, 1, 1, 30, 50, False, True], 'an': 15, 'price': 100, 'weight': 20})
 ITEMS.append({'id': 30002, 'type': 7, 'level': 1, 'g': 3002, 'icon': 'manopla_mk12', 'name': 'Manopla Gambiarra Mk XII',
               'desc': 'Doze núcleos encaixados, um de cada classe. Ninguém sabe como funciona. Nem quem construiu. Mas funciona.',
-              'stats': ','.join(f'{e}#7d0#bb8#0#1d1001+1999' for e in ('61', '63', '62', '60', '64')) + ',6f#1#0#0#0d0+1',   # 2000 a 3000 em cada elemento
+              'stats': ','.join(f'{e}#15#23#0#1d15+20' for e in ('61', '63', '62', '60', '5f')) + ',6f#1#0#0#0d0+1,7d#3e8#0#0#0d0+1000',   # dano da Epee Clipse (neutro rouba vida) + 1 PA + 1000 de vitalidade
              
               'weapon': [10, 4, 1, 2, 10, 100, False, True], 'an': 15, 'price': 1, 'weight': 20})
 for i, cls in enumerate(CLASSES):
@@ -346,65 +346,167 @@ DIALOGS = {
 # ----------------------------------------------------------------- Bar das Celebridades (mapa 30015)
 # Homenagens de fã num servidor particular. Pessoas reais aparecem de forma carinhosa, sem piadas ofensivas.
 # (nome, gfx, escala, cores [cabelo, roupa, detalhe], fala, [(pergunta extra, resposta extra)])
-CELEBRITIES = [  # paródias (nomes e falas próprios, sem bordões nem letras de terceiros)
-    ('Bigodix, o Gaulês', 80, 80, [0xE8C04A, 0x202020, 0xC02020],
-     'Pelos meus bigodes! Os deuses daqui dão poder de mão beijada? Na minha aldeia o druida faz uma poção mágica com as próprias mãos. É quase uma cervejaria.',
-     [('E o seu amigo grandão?', 'O Pedrix? Caiu num caldeirão quando era pequeno. Não deixe ele chegar perto do barril.')]),
-    ('Pedrix, Carregador de Menires', 120, 135, [0xC0502A, 0x3A6FD0, 0xE8E8E8],
-     'Eu NÃO sou gordo! É o jaleco que é justo. Esses LabTechs são malucos... mas a cerveja deles combina com javali assado.',
-     [('Quer uma cerveja?', 'Só um barril. Pequeno. Dois.')]),
-    ('Homero Simplório', 30, 110, [0x1A1A1A, 0xF0F0F0, 0x3050A0],
-     'Hmmm... cerveja LabTech. Eu vim só pela rosquinha, mas fiquei pela cerveja. E pelo sofá. Principalmente pelo sofá.',
-     [('Tudo bem aí?', 'Perdi o emprego, achei uma rosquinha, ganhei uma cerveja. Dia excelente.')]),
-    ('Mané do Balcão', 40, 100, [0x2A2A2A, 0x6A7A50, 0xE8E8E8],
-     'Taverna do Mané, filial LabTech. Se o telefone tocar procurando alguém de nome esquisito, não atenda. É trote.',
-     [('Tem cerveja de marca?', 'Aqui só tem cerveja feita à mão. Marca famosa é pra quem não sabe fermentar.')]),
-    ('Charlinho Brilho', 60, 100, [0x4A3020, 0x1A2A4A, 0xE0E0E0],
-     'Vencendo, sempre vencendo! Vim ao LabTech porque aqui todo mundo faz a própria sorte. Bebo com moderação, brindo sem moderação.',
-     [('Algum conselho?', 'Seja o protagonista da sua própria série. E sempre agradeça ao barman.')]),
-    ('Leôncio Violeiro', 90, 100, [0x2A1A10, 0x8A5A2A, 0xE8D8A0],
-     'Ô, trem bom! Entre um gole e outro, uma moda de viola. Cerveja gelada e sertanejo raiz: é assim que a gente faz no LabTech.',
-     [('Canta uma?', 'Essa eu fiz agora: "caneca na mão, viola no peito, cerveja artesanal feita do nosso jeito".')]),
-    ('Zé do Pagode', 120, 100, [0x9A9A9A, 0xF4F4F4, 0x2A6A2A],
-     'Devagarinho, sem pressa, que a vida é boa! Aqui no LabTech o samba é de fundo de quintal e a cerveja é feita em casa, do jeitinho que eu gosto.',
-     [('Um brinde?', 'Saúde! E bora pro boteco, que o pagode não espera ninguém.')]),
-    ('Thor', 80, 110, [0xE8C84A, 0x5A5A6A, 0xB01818],
-     'Eu sou Thor, filho de Odin. Sou um dos dois únicos deuses bem-vindos no LabTech: eu bebo com eles. Os outros só distribuem poder de mão beijada.',
-     [('E o martelo?', 'Mjölnir só obedece a quem é digno. A Manopla Gambiarra obedece a quem soldou ela direito. Respeito.')]),
-    ('Pedrão Grifo', 30, 115, [0x5A3A20, 0xF0F0F0, 0x3A6A2A],
-     'Hehehehe. Sabe o que é melhor que uma cerveja? Duas cervejas. Sabe o que é melhor que duas? O laboratório inteiro.',
-     [('Conta uma história.', 'Isso me lembra aquela vez em que eu briguei com uma galinha gigante pela cidade inteira. Ou foram duas vezes? Hehehe.')]),
-    ('Barnabé Arroto', 30, 105, [0x5A3A1A, 0xE0B080, 0x3A3A7A],
-     '*burp* Cheguei antes de todo mundo e vou sair depois de todo mundo. Cerveja LabTech é quase tão boa quanto a do Mané. Não conta pra ele.',
-     [('Tudo bem?', 'Melhor impossível. Já cantei até ópera hoje.')]),
-    ('Homem-Barril', 80, 105, [0x2A1A10, 0xD01818, 0x1838A0],
-     'Opa, opa! O Homem-Barril está aqui para garantir que toda caneca esteja cheia! Ele nunca pergunta "por quê", ele pergunta "mais uma?"',
-     [('Mais uma?', 'MAIS UMA!')]),
-    ('Capitão Bacalhau', 30, 100, [0x1A1A1A, 0x1A2A6A, 0xE8E8E8],
-     'Macacos me mordam! Uma cervejaria no meio do oceano e ninguém me avisou? Com mil tempestades, isto merece um brinde!',
-     [('E o seu amigo repórter?', 'Foi investigar o sumiço de um barril. Aposto que foi o Pedrix.')]),
-    ('Capitão Pardal', 40, 100, [0x1A1A1A, 0x6A2A1A, 0xC8B070],
-     'Capitão. CAPITÃO Pardal. Por que a cerveja sempre acaba? Eu sei, pirata que se preza bebe rum. Mas o lúpulo daqui é excelente, entendeu?',
-     [('E o navio?', 'Está estacionado atrás da estufa. Não conte pro Encanador que eu amarrei ele no cano principal.')]),
-    ('Tirino, o Estrategista', 30, 75, [0xD8C890, 0x6A1A1A, 0xC8A040],
-     'Pequeno no tamanho, grande na adega. O LabTech não pediu nada aos deuses e ainda assim tem a melhor cerveja do mundo. Isso é política.',
-     [('Mais alguma coisa?', 'Quem lê muito e bebe bem nunca perde uma discussão. Pelo menos não lembra de ter perdido.')]),
-    ('Grandão Guarda-Caça', 120, 145, [0x2A1A10, 0x5A3A20, 0x3A2A1A],
-     'Ih, falei demais de novo... mas a Levedura Selvagem daqui é melhor que qualquer hidromel. Cuidado com o dragão lá fora: ele adora malte.',
-     [('Dragão?', 'É um Dragão Porco. Bem educado. Quase nunca morde.')]),
-    ('Gimbo, o Anão', 30, 85, [0xC0502A, 0x6A6A70, 0x8A2A1A],
-     'Anão não se arremessa: anão arremessa barril, e só se estiver vazio. Cerveja boa é a que se faz na forja, com as próprias mãos. E com machado.',
-     [('Uma competição?', 'Quem beber mais ganha. Estou em quarenta e dois. E você?')]),
-    ('Ragnar', 110, 105, [0xD8C890, 0x4A4A4A, 0x6A3A1A],
-     'O salão dos deuses espera, mas não tem pressa. Primeiro a cerveja, depois a glória. Os deuses que me esperem sentados.',
-     [('Não teme os deuses?', 'Os deuses precisam mais de nós do que nós deles. Os LabTechs entenderam isso primeiro.')]),
-    ('Gatão da Destruição', 60, 100, [0x6A4A8A, 0x1A1A1A, 0xD8B040],
-     'Sou o Gatão, o Deus da Destruição. Vim destruir este planeta, mas provei a Stout do Estagiário. Destruição adiada.',
-     [('E agora?', 'Tragam mais uma. Se estiver boa, talvez eu esqueça de vez.')]),
-    ('Dionísio', 100, 105, [0x3A1A4A, 0x7A2A8A, 0xD8C040],
-     'Sou Dionísio, deus do vinho e da festa: o outro deus bem-vindo por aqui. Meus colegas lá em cima dão poder de graça; eu só dou ressaca. Pelo menos sou honesto.',
-     [('Vinho ou cerveja?', 'Os dois, meu amigo. Um deus sabe se adaptar. Diferente dos outros.')]),
+CELEBRITIES = [  # paródias escrachadas: nomes próprios, histórias que lembram de onde cada um vem
+    ('Bigodix, o Gaulês', 0, 100, None,
+     'Pelos meus bigodes! Venho de uma aldeiazinha gaulesa que resiste sozinha a um império inteiro de romanos. O segredo? O druida da aldeia faz uma poção mágica que dá superforça. Vocês fazem a mesma coisa, só que com lúpulo.',
+     [('De onde você vem?', 'Da única aldeia da Gália que os romanos nunca conquistaram. Nosso chefe só tem medo de uma coisa: que o céu caia na cabeça dele. E o nosso bardo canta tão mal que, no banquete, a gente amarra ele numa árvore.'),
+      ('E a poção mágica?', 'Receita secreta do druida: visco colhido com foice de ouro, lagosta e mais uns ingredientes que eu não posso contar. Igualzinho à cerveja de vocês: o segredo é o ingrediente que ninguém conta.'),
+      ('E o seu amigo grandão?', 'O Pedrix? Caiu no caldeirão da poção quando era bebê e ficou forte pra sempre. Por isso ele não pode tomar nem um golinho. Não deixe ele chegar perto do barril.')]),
+    ('Pedrix, Carregador de Menires', 0, 100, None,
+     'Eu NÃO sou gordo! Sou só um pouco fortinho no peito. Entrego menires, derrubo romanos e como javali. Esses LabTechs são malucos... mas a cerveja deles combina com javali assado.',
+     [('Por que você é tão forte?', 'Caí no caldeirão da poção mágica quando era pequenininho. O druida nunca mais me deixou tomar, nem um gole. Injustiça! Por isso eu compenso no javali: três no café da manhã.'),
+      ('Quem é esse cachorrinho?', 'É o Ideiafixinho, meu cachorro. Ele odeia ver árvore sendo cortada e ama osso. Se ele latir pra você, é carinho.'),
+      ('Quer uma cerveja?', 'Só um barril. Pequeno. Dois.')]),
+    ('Homero Simplório', 0, 100, None,
+     'Hmmm... cerveja LabTech. Eu sou inspetor de segurança de uma usina nuclear em Sprinfilde. Quer dizer, eu durmo na cadeira do inspetor de segurança. Vim só pela rosquinha e fiquei pela cerveja.',
+     [('De onde você vem?', 'De Sprinfilde, uma cidade onde tudo dá errado toda semana e no episódio seguinte está tudo certo de novo. Moro com a Marjorie do cabelo azul, o Bartolomeu, a Lisa, a bebê e um galgo aposentado. Meu chefe é um velho malvado que diz "excelente" juntando os dedinhos.'),
+      ('Qual a sua cerveja favorita?', 'A do bar do Mané, uma marca famosa lá da minha cidade. Mas não conta pra ninguém: a Stout do Estagiário é melhor. Um brinde à cerveja: a causa e a solução de todos os problemas da vida!'),
+      ('Tudo bem aí?', 'Perdi o emprego, achei uma rosquinha, ganhei uma cerveja. Dia excelente. Quer dizer... *faz aquele barulho de quando a gente erra*.')]),
+    ('Mané do Balcão', 0, 100, None,
+     'Taverna do Mané, filial LabTech. Lá em Sprinfilde eu tenho um bar com clientela fixa: o Homero, o Barnabé e mais uns três que nunca vão embora. Aqui pelo menos o chão é limpo.',
+     [('Por que você odeia o telefone?', 'Porque um moleque de Sprinfilde vive me passando trote! Liga perguntando por uma pessoa com nome de trocadilho, e eu, burro, grito o nome pro bar inteiro. Todo mundo ri. Se o telefone tocar, NÃO atende.'),
+      ('Tem cerveja de marca?', 'Aqui só tem cerveja feita à mão. Lá no meu bar eu sirvo a marca famosa da cidade... e um drinque flamejante cuja receita eu roubei do Homero. Longa história.')]),
+    ('Charlinho Brilho', 0, 100, None,
+     'Vencendo! Sempre vencendo! Eu fiz uma série de TV sobre dois homens e meio... barril. Dizem que eu tenho sangue de tigre nas veias. No LabTech eu me sinto em casa: todo mundo aqui faz a própria sorte.',
+     [('Que série era essa?', 'Um solteirão rico que mora na praia, o irmão que vive de favor e um sobrinho que só comia. Um monte de temporadas! Depois eu saí brigado, dei entrevista dizendo que era um guerreiro com sangue de tigre e virei meme. Vencendo.'),
+      ('Algum conselho?', 'Seja o protagonista da sua própria série. Beba com moderação, brinde sem moderação. E sempre agradeça ao barman.')]),
+    ('Leôncio Violeiro', 0, 100, None,
+     'Ô, trem bom! Sou de Goiás e cantei a vida inteira em dupla com meu irmão. Entre um gole e outro, uma moda de viola. Cerveja gelada e sertanejo raiz: é assim que a gente faz no LabTech.',
+     [('Qual música você canta?', 'Aquela que o Brasil inteiro canta chorando no fim da festa, pedindo pra pessoa amada lembrar da gente. Mas a letra tem dono, então aqui eu só canto as minhas de boteco: "caneca na mão, viola no peito, cerveja artesanal feita do nosso jeito".'),
+      ('E o cabaré?', 'Eu e um parceiro fizemos um show inteiro só de moda de cabaré, com mesa de bar no palco. Aqui no LabTech o cabaré é a Cervejaria: mesma alegria, menos cadeira quebrada.')]),
+    ('Zé do Pagode', 0, 100, None,
+     'Devagarinho, sem pressa, que a vida é boa! Sou lá de Xerém, no Rio. Samba de fundo de quintal, feijoada no domingo e cerveja gelada no copo americano. Aqui a cerveja é feita em casa, do jeitinho que eu gosto.',
+     [('Qual a sua cerveja?', 'Rapaz, uma vez eu fiz propaganda pra uma marca de cerveja, depois fui pra outra, depois voltei pra primeira... Deu uma confusão que parou o país! Aqui não tem esse problema: não tem marca, tem receita.'),
+      ('Um brinde?', 'Saúde! E bora pro boteco, que o pagode não espera ninguém. Se a vida levar, a gente vai junto.')]),
+    ('Thor', 0, 100, None,
+     'Eu sou Thor, filho de Odin, deus do trovão, direto de Asgard. Sou um dos dois únicos deuses bem-vindos no LabTech: eu bebo com eles. Os outros só distribuem poder de mão beijada.',
+     [('E o seu irmão?', 'O Loki, deus da trapaça? Da última vez ele virou um barril pra roubar a cerveja do Homem-Barril. Se você vir um barril que pisca, avisa.'),
+      ('E o martelo?', 'Mjölnir só obedece a quem é digno. A Manopla Gambiarra obedece a quem soldou ela direito. Respeito.')]),
+    ('Pedrão Grifo', 0, 100, None,
+     'Hehehehe. Eu sou de Quaóg, uma cidadezinha lá de Rhode Island. Eu trabalhava numa cervejaria, até beber o estoque. Sabe o que é melhor que uma cerveja? Duas cervejas.',
+     [('Quem é a sua família?', 'A Lúcia, minha esposa; a Mega, que ninguém dá bola; o Cristiano; o bebê Estevão, que tem sotaque britânico e quer dominar o mundo; e o Braian, o cachorro que fala, bebe martíni e escreve um livro que nunca termina.'),
+      ('Conta uma história.', 'Isso me lembra aquela vez em que eu briguei com uma galinha gigante pela cidade inteira. Quebramos um prédio, um navio e um avião. Ou foram duas vezes? Hehehe.')]),
+    ('Barnabé Arroto', 0, 100, None,
+     '*burp* Sou de Sprinfilde. Passo o dia no bar do Mané, do lado do Homero. Cheguei antes de todo mundo e vou sair depois de todo mundo. A cerveja LabTech é quase tão boa quanto a do Mané. Não conta pra ele.',
+     [('Você já foi pro espaço?', 'Já! A agência espacial me escolheu pra ser astronauta. Fiquei sóbrio pela primeira vez na vida... durou até me darem champanhe. No fim, quem foi pro espaço foi o Homero. *burp*'),
+      ('Tudo bem?', 'Melhor impossível. Já cantei até ópera hoje. E uma vez eu tive um limpa-neve e era o Rei do Arado. Longa história.')]),
+    ('Homem-Barril', 0, 100, None,
+     'Oh yeah! O Homem-Barril chegou! Sou a mascote de uma cervejaria famosa de Sprinfilde: capa, cinto de latinhas e uma sede infinita. Estou aqui para garantir que toda caneca esteja cheia!',
+     [('Quem é você de verdade?', 'O Homem-Barril nunca revela a identidade secreta! Já foram vários Homens-Barril: quando um se aposenta, outro veste o capacete. O Homem-Barril é eterno. Oh yeah!'),
+      ('Mais uma?', 'MAIS UMA! O Homem-Barril nunca pergunta "por quê", ele pergunta "mais uma?". Oh yeah!')]),
+    ('Capitão Bacalhau', 0, 100, None,
+     'Com mil milhões de... bacalhaus! Sou capitão da marinha mercante e moro num castelo enorme. Rodo o mundo com um jovem repórter de topete e o cachorrinho branco dele. Uma cervejaria no meio do oceano e ninguém me avisou?',
+     [('Quem é o repórter?', 'Um rapaz que nunca escreve reportagem nenhuma, só se mete em aventura: foi pra Lua, pro Tibete, pro Congo... E o cachorro dele, branquinho, é mais esperto que nós dois juntos. Agora foram investigar o sumiço de um barril. Aposto que foi o Pedrix.'),
+      ('Você bebe o quê?', 'Uísque escocês, normalmente. Mas a Stout do Estagiário me fez esquecer até do meu antepassado pirata. Raios e trovões, isto merece um brinde!')]),
+    ('Capitão Pardal', 0, 100, None,
+     'Capitão. CAPITÃO Pardal, do navio Pérola Preta, o mais rápido do Caribe. Minha bússola não aponta pro norte: aponta pro que eu mais quero. E agora ela está apontando pra esse barril aqui, entendeu?',
+     [('Por que a bebida sempre acaba?', 'Eis a grande questão da humanidade! Pirata que se preza bebe rum, e o rum sempre acaba. Aqui no LabTech eles fazem mais. Genial. Vou roubar a receita... quer dizer, pegar emprestada.'),
+      ('E o navio?', 'Está estacionado atrás da estufa. Não conte pro Encanador que eu amarrei ele no cano principal. E se aparecer um sujeito com cara de polvo cobrando dívida, eu não estou aqui.')]),
+    ('Tirino, o Estrategista', 0, 100, None,
+     'Eu bebo e fico sabendo das coisas. Sou de uma família muito rica e muito leonina, de um reino onde todo mundo quer sentar num trono feito de espadas. Pequeno no tamanho, grande na adega.',
+     [('De onde você vem?', 'De Porto Rei, onde as pessoas morrem em casamento e ninguém lê o próximo livro. Minha família sempre paga as suas dívidas, principalmente as de bar. Já fui Mão do Rei, Mão da Rainha... e agora sou mão na caneca.'),
+      ('Mais alguma coisa?', 'Uma mente precisa de livros como uma espada precisa de pedra de amolar... e um inventor precisa de cerveja. Ah, e se agasalhe: o inverno está chegando.')]),
+    ('Grandão Guarda-Caça', 0, 100, None,
+     'Você é um inventor, LabTech! Tá, tá, é isso que eu digo pra todo aluno novo. Sou o guarda-caça e guardião das chaves de uma escola de magia num castelo lá na Escócia. A Levedura Selvagem daqui é melhor que qualquer hidromel.',
+     [('Que escola é essa?', 'Não posso falar muito... Ih, já falei demais de novo. Uma escola com quatro casas, escadas que mudam de lugar e um esporte jogado em vassouras. Eu cuido dos bichos: um cachorro de três cabeças chamado Fofinho, um dragão que eu choquei na lareira e umas aranhas gigantes. Todos uns amores.'),
+      ('Dragão?', 'Lá fora tem um Dragão Porco. Bem educado. Quase nunca morde. O meu, o Norbertinho, teve que ir morar na Romênia. Choro até hoje.')]),
+    ('Gimbo, o Anão', 0, 100, None,
+     'Anão não se arremessa! Mas anão arremessa barril, se estiver vazio. Venho das minas da Terra-média, onde a gente cava fundo demais e acorda coisa que não devia. Cerveja boa é a que se faz na forja, com as próprias mãos. E com machado.',
+     [('Uma competição?', 'Com o elfo orelhudo eu competia pra ver quem derrubava mais orcs. Aqui é quem bebe mais. Estou em quarenta e dois. E você?'),
+      ('E o anel?', 'Nem me fale de anel. Nove companheiros atravessaram meio mundo por causa de um anelzinho. Se fosse uma caneca, eu entendia.')]),
+    ('Ragnar', 0, 100, None,
+     'Sou Ragnar, o fazendeiro que virou rei de Kattegat. Fui o primeiro a navegar pro oeste quando todo mundo dizia que lá não tinha nada. O salão dos deuses espera, mas não tem pressa. Primeiro a cerveja, depois a glória.',
+     [('Quem construiu o seu barco?', 'O Floki, meu amigo maluco. Construía navios na mão, sem planta, sem bênção, só na teimosia e na gambiarra. Na real, ele era um LabTech antes de existir LabTech. Brindo a ele.'),
+      ('Não teme os deuses?', 'Os deuses precisam mais de nós do que nós deles. Os LabTechs entenderam isso primeiro.')]),
+    ('Gatão da Destruição', 0, 100, None,
+     'Sou o Gatão, o Deus da Destruição do Universo 7. Acordei de um cochilo de 39 anos, vim destruir este planeta, mas provei a Stout do Estagiário. Destruição adiada.',
+     [('Por que você não destruiu?', 'Da última vez que eu ia destruir um planeta, me ofereceram um pudim. Pudim! Poupei o planeta inteiro. Aqui foi a cerveja. Vocês, mortais, sabem negociar.'),
+      ('Quem é o seu rival?', 'Um macaquinho de cabelo espetado que fica loiro quando grita. Ele luta bem... mas nunca trouxe cerveja. Meu anjo assistente, o de cabelo branco, diz que eu sou preguiçoso. Ele tem razão.')]),
+    ('Dionísio', 0, 100, None,
+     'Sou Dionísio, deus do vinho, da festa e do teatro, direto do Olimpo: o outro deus bem-vindo por aqui. Meus colegas lá em cima dão poder de graça; eu só dou ressaca. Pelo menos sou honesto.',
+     [('Como é o Olimpo?', 'Chato. O Zeus manda raio em quem discorda, a Hera briga com todo mundo e o Hermes nunca entrega o correio no prazo. Eu fico no canto, fazendo festa. Por isso me dou bem com o LabTech.'),
+      ('Vinho ou cerveja?', 'Os dois, meu amigo. Um deus sabe se adaptar. Diferente dos outros.')]),
+    ('Rique Sanches', 0, 100, None,
+     '*burp* Então esse é o tal LabTech. Eu sou o cientista mais inteligente de todas as dimensões e viajo com uma pistola de portal que eu fiz na garagem. Finalmente alguém que presta nesta dimensão. A cerveja? Aceitável.',
+     [('Você conhece os deuses?', 'Conheço. Já saí na mão com uns três. Deus é só um cara com poder demais e método científico de menos. Vocês fazem certo: ciência, gambiarra e cerveja.'),
+      ('Cadê o seu neto?', 'O Mortinho ficou lá fora olhando os Tofus. Se ele perguntar, diz que eu fui buscar cerveja. Em outra dimensão. E se você achar um picles falando, não come. Sou eu. Longa história.'),
+      ('Qual é o seu grito de guerra?', 'Aquele que ninguém entende e que, na verdade, quer dizer "estou sofrendo muito, me ajuda". Mas, falado com uma caneca na mão, parece alegria.')]),
 ]
+
+# Aparência de cada celebridade: um sprite de NPC do jogo (nunca as 12 classes) recolorido para lembrar a pessoa.
+# base = id do sprite no cliente; cores = regras de celebs.py (faixa de matiz/saturação/brilho -> cor nova);
+# escala = tamanho do NPC (%). O sprite novo vira clips/sprites/<gfx>.swf no cliente (gfx 9920 em diante).
+PELE = {'h': (18, 40), 's': (0.3, 0.62), 'v': (0.82, 1)}
+CELEB_LOOK = {
+    'Bigodix, o Gaulês': {'base': 1489, 'escala': 115, 'cores': [
+        {'h': (38, 52), 's': (0.85, 1), 'v': (0.2, 0.86), 'to': '#F2B88A'},   # pele dourada -> pele
+        {'h': (95, 145), 'to': '#C8281E'}]},                                  # calça verde -> vermelha
+    'Pedrix, Carregador de Menires': {'base': 9064, 'escala': 110, 'cores': [
+        {'h': (40, 56), 's': (0.7, 1), 'v': (0.6, 1), 'to': '#F4F4F4'},       # listras amarelas -> brancas
+        {'h': (15, 40), 's': (0.15, 0.45), 'v': (0.1, 0.5), 'to': '#2A4FA0'},  # roupa escura -> azul
+        {'h': (0, 360), 's': (0, 0.22), 'v': (0.7, 1), 'to': '#D2551E'}]},    # barba e cabelo -> ruivos
+    'Homero Simplório': {'base': 9107, 'escala': 105, 'cores': [
+        dict(PELE, to='#FFD90F'),                                             # pele -> amarela
+        {'h': (80, 160), 'to': '#9C7F5A'}]},                                  # barba verde -> barba por fazer
+    'Mané do Balcão': {'base': 1207, 'escala': 95, 'cores': [
+        {'h': (240, 310), 'to': '#3A3A48'}]},                                 # roupa lilás -> escura
+    'Charlinho Brilho': {'base': 9095, 'escala': 100, 'cores': [
+        {'h': (15, 40), 's': (0.85, 1), 'v': (0.3, 1), 'to': '#4A3020'}]},    # cabelo laranja -> castanho
+    'Leôncio Violeiro': {'base': 9056, 'escala': 100, 'cores': [
+        {'h': (45, 62), 's': (0.6, 1), 'v': (0.7, 1), 'to': '#B8864A'}]},     # chapéu amarelo -> couro
+    'Zé do Pagode': {'base': 9083, 'escala': 100, 'cores': [
+        {'h': (44, 66), 's': (0.25, 0.8), 'v': (0.45, 1), 'to': '#EFEFEA'}]},  # chapéu e calça -> brancos
+    'Thor': {'base': 9019, 'escala': 100, 'cores': []},
+    'Pedrão Grifo': {'base': 9017, 'escala': 105, 'cores': [
+        {'h': (40, 62), 's': (0.5, 1), 'v': (0.8, 1), 'to': '#F4F4F0'},       # camisa amarela -> branca
+        {'h': (200, 240), 'to': '#E8E8E8'},                                   # punhos azuis -> brancos
+        {'h': (18, 32), 's': (0.55, 1), 'v': (0.25, 0.6), 'to': '#3E6B2A'}]},  # calça marrom -> verde
+    'Barnabé Arroto': {'base': 9110, 'escala': 100, 'cores': [
+        {'h': (195, 222), 'to': '#6A4A30'},                                   # jeans -> calça marrom
+        {'h': (0, 360), 's': (0, 0.06), 'v': (0.9, 1), 'to': '#E6C6B4'}]},    # camisa branca -> rosada
+    'Homem-Barril': {'base': 1619, 'escala': 110, 'cores': [
+        {'h': (30, 50), 's': (0.4, 1), 'v': (0.5, 1), 'to': '#C0202A'}]},     # madeira -> barril vermelho
+    'Capitão Bacalhau': {'base': 1621, 'escala': 85, 'cores': [
+        {'h': (52, 70), 'to': '#F0B488'},                                     # pele verde -> pele
+        {'h': (0, 20), 's': (0.8, 1), 'v': (0.3, 0.9), 'to': '#1F2F5A'}]},    # casaco vermelho -> azul-marinho
+    'Capitão Pardal': {'base': 9060, 'escala': 100, 'cores': [
+        {'h': (25, 45), 's': (0.85, 1), 'v': (0.5, 1), 'to': '#5A3A22'}]},    # roupa laranja -> marrom
+    'Tirino, o Estrategista': {'base': 9058, 'escala': 85, 'cores': [
+        {'h': (45, 62), 'to': '#A01E1E'},                                     # chapéu e roupa -> vermelho
+        {'h': (12, 30), 's': (0.8, 1), 'to': '#E8D080'}]},                    # cabelo -> loiro
+    'Grandão Guarda-Caça': {'base': 1472, 'escala': 78, 'cores': [
+        {'h': (190, 240), 'v': (0.3, 1), 'to': '#3B2A1E'},                    # pelo azulado -> castanho-escuro
+        {'h': (0, 360), 's': (0, 0.06), 'v': (0.85, 1), 'to': '#4A3A2E'}]},   # barba branca -> escura
+    'Gimbo, o Anão': {'base': 9036, 'escala': 100, 'cores': [
+        {'h': (0, 360), 's': (0, 0.25), 'v': (0.8, 1), 'to': '#C0501E'},      # barba branca -> ruiva
+        {'h': (55, 90), 's': (0.6, 1), 'to': '#6A4A2A'}]},                    # bolsa verde -> couro
+    'Ragnar': {'base': 1206, 'escala': 100, 'cores': [
+        {'h': (0, 25), 's': (0.6, 1), 'v': (0.4, 1), 'to': '#7A5230'},        # vermelhos -> couro
+        {'h': (225, 245), 'to': '#3A3A3A'}]},                                 # armadura azul-escura -> cinza
+    'Gatão da Destruição': {'base': 9109, 'escala': 100, 'cores': [
+        {'h': (0, 360), 's': (0, 0.12), 'v': (0.8, 1), 'to': '#A48AC4'},      # pelo branco -> roxo
+        {'h': (220, 250), 'to': '#C85A28'},                                   # calça azul -> laranja
+        {'h': (0, 360), 's': (0, 0.05), 'v': (0.45, 0.75), 'to': '#222222'}]},  # camisa cinza -> preta
+    'Dionísio': {'base': 9000, 'escala': 100, 'cores': [
+        {'h': (30, 50), 's': (0.05, 0.35), 'v': (0.75, 1), 'to': '#6A1F4A'},  # manto bege -> vinho
+        {'h': (25, 40), 's': (0.6, 1), 'v': (0.6, 1), 'to': '#4A3020'},       # barba laranja -> castanha
+        {'h': (42, 56), 's': (0.7, 1), 'to': '#4F8A2A'}]},                    # mitra dourada -> folhas de parreira
+    'Rique Sanches': {'base': 9018, 'escala': 100, 'cores': [
+        {'h': (340, 15), 's': (0.25, 0.75), 'v': (0.5, 1), 'to': '#F2F2F0'},  # roupão rosa -> jaleco branco
+        {'h': (50, 70), 's': (0.6, 1), 'to': '#8FC8E0'},                      # faixa amarela -> camisa azul-clara
+        {'h': (0, 360), 's': (0, 0.14), 'v': (0.88, 1), 'to': '#B8D4DE'}]},   # cabelo branco -> azul-acinzentado
+}
+# Retrato do dialogo: o oficial do NPC base (recolorido) so onde ele e o mesmo personagem do sprite;
+# nos outros, um busto renderizado do proprio sprite novo.
+RETRATO_OFICIAL = {'Mané do Balcão', 'Leôncio Violeiro', 'Thor', 'Homem-Barril', 'Capitão Bacalhau', 'Capitão Pardal',
+                   'Grandão Guarda-Caça', 'Ragnar', 'Dionísio'}
+CELEB_SPRITES = []
+for _i, _c in enumerate(CELEBRITIES):
+    _look = CELEB_LOOK[_c[0]]
+    CELEB_SPRITES.append({'nome': _c[0], 'gfx': 9920 + _i, 'base': _look['base'], 'cores': _look['cores'],
+                          'retrato': 'oficial' if _c[0] in RETRATO_OFICIAL else 'sprite'})
+    CELEBRITIES[_i] = (_c[0], 9920 + _i, _look['escala'], None, _c[4], _c[5])
+
 for _i, (_name, _gfx, _scale, _colors, _fala, _extras) in enumerate(CELEBRITIES):
     _nid = 3014 + _i
     NPCS.append({'id': _nid, 'name': _name, 'gfx': _gfx, 'scale': _scale, 'colors': _colors, 'maps': {30015: None}})

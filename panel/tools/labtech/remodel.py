@@ -601,6 +601,47 @@ def _arm_decor(sb, role, box, k):
             sb.circle(int(gx), int(gy), gr, col, G_OUT, max(4, line // 2))
 
 
+# Animacoes que so existem em outras classes. O LabTech usa feiticos das 12 classes: se o cliente pede uma
+# animacao que o boneco nao tem, ele fica esperando o fim dela e a luta trava. Cada nome aponta para uma
+# animacao equivalente do boneco (que chama applyEnd/applyAnim no fim, como a original).
+ANIM_ALIASES = {
+    'anim18endL': 'anim18EndL', 'anim18endR': 'anim18EndR',             # Enutrof, Xelor
+    'anim8L_CLIP': 'anim8L',                                             # Cra, Sadida, Sacrier, Pandawa
+    'spGo0L': 'runL', 'spGo0R': 'runR', 'spShoot0L': 'anim1L', 'spShoot0R': 'anim1R',   # Ecaflip
+    'spBack0L': 'anim1L', 'spBack0R': 'anim1R', 'spEnd0L': 'staticL', 'spEnd0R': 'staticR',
+    'static_CL': 'staticL', 'static_CR': 'staticR', 'walk_CL': 'walkL', 'walk_CR': 'walkR',   # Pandawa carregando
+    'run_CL': 'runL', 'run_CR': 'runR', 'hit_CL': 'hitL', 'hit_CR': 'hitR', 'die_CL': 'dieL', 'die_CR': 'dieR',
+    'carring_CL': 'staticL', 'carring_CR': 'staticR', 'carringR': 'anim1R',
+    'carringThrow_CL': 'anim1L', 'carringThrow_CR': 'anim1R', 'carringEnd_CL': 'anim1L', 'carringEnd_CR': 'anim1R',
+}
+
+
+def add_anim_aliases(tags):
+    """Exporta os nomes de ANIM_ALIASES que faltam, apontando para o sprite da animacao equivalente."""
+    ex = {}
+    for c, d in tags:
+        if c == 56:
+            n, q = struct.unpack_from('<H', d, 0)[0], 2
+            for _ in range(n):
+                cid = struct.unpack_from('<H', d, q)[0]
+                e = d.index(NUL, q + 2)
+                ex[d[q + 2:e].decode('latin1')] = cid
+                q = e + 1
+    novos = [(name, ex[alvo]) for name, alvo in ANIM_ALIASES.items() if name not in ex and alvo in ex]
+    if not novos:
+        return tags
+    tag = (56, struct.pack('<H', len(novos)) + b''.join(struct.pack('<H', cid) + name.encode() + NUL for name, cid in novos))
+    last = max(i for i, (c, _) in enumerate(tags) if c == 56)
+    return tags[:last + 1] + [tag] + tags[last + 1:]
+
+
+def _swap_char(td, new_id):
+    """PlaceObject2 com desenho: troca o id do desenho (bytes 3-4)."""
+    t = bytearray(td)
+    t[3:5] = struct.pack('<H', new_id)
+    return bytes(t)
+
+
 def _arm_roles(disp, points, parts):
     """No quadro atual: {profundidade: 'mao'|'antebraco'} do braco oposto ao escudo."""
     shield = [e['m'] for e in disp.values() if e['ch'] in points]
@@ -656,7 +697,11 @@ def add_gauntlet(tags, k_hand=1.35, k_fore=1.25):
         if c == 39:
             kids = _sprite_children(d)
             if any(tc == 26 and c13._parse_place2(td)['char'] in points for tc, td in kids):
+                # Cada parte do corpo fica na sua camada (profundidade) durante a animacao inteira. A mao e o
+                # antebraco da manopla sao escolhidos por posicao no primeiro quadro em que aparecem e, dai em
+                # diante, TUDO que for desenhado naquelas camadas vira metal (braco levantado, correndo etc.).
                 disp, new = {}, []
+                layer, hist = {}, {}   # camada -> papel; camada -> [indices das colocacoes com desenho]
                 for tc, td in kids:
                     if tc == 26:
                         pl = c13._parse_place2(td)
@@ -664,23 +709,26 @@ def add_gauntlet(tags, k_hand=1.35, k_fore=1.25):
                         if fl & 0x02:
                             old = disp.get(dep)
                             m = pl['matrix'] if fl & 0x04 else (old['m'] if old and fl & 0x01 else (1, 0, 0, 1, 0, 0))
-                            disp[dep] = {'ch': pl['char'], 'm': m, 'idx': len(new), 'ok': False}
+                            disp[dep] = {'ch': pl['char'], 'm': m}
+                            hist.setdefault(dep, []).append(len(new))
+                            if dep in layer and pl['char'] in parts:
+                                td = _swap_char(td, copy_for(pl['char'], layer[dep]))
+                                swapped += 1
                         elif dep in disp and fl & 0x04:
                             disp[dep]['m'] = pl['matrix']
                     elif tc in (5, 28):
                         disp.pop(struct.unpack_from('<H', td, 2 if tc == 5 else 0)[0], None)
                     elif tc == 1:
-                        pend = [dep for dep, e in disp.items() if not e['ok']]
-                        if pend:
-                            roles = _arm_roles(disp, points, parts)
-                            for dep in pend:
-                                e = disp[dep]
-                                e['ok'] = True
-                                if dep in roles:
-                                    t = bytearray(new[e['idx']][1])
-                                    t[3:5] = struct.pack('<H', copy_for(e['ch'], roles[dep]))
-                                    new[e['idx']] = (26, bytes(t))
-                                    swapped += 1
+                        faltam = {'mao', 'antebraco'} - set(layer.values())
+                        if faltam:
+                            for dep, role in _arm_roles(disp, points, parts).items():
+                                if role in faltam and dep not in layer:
+                                    layer[dep] = role
+                                    for i in hist.get(dep, []):   # inclusive o que ja foi desenhado antes
+                                        ch = c13._parse_place2(new[i][1])['char']
+                                        if ch in parts:
+                                            new[i] = (26, _swap_char(new[i][1], copy_for(ch, role)))
+                                            swapped += 1
                     new.append((tc, td))
                 d = d[:4] + b''.join(swf.encode_tag(tc, td) for tc, td in new)
         out.append((c, d))
@@ -904,6 +952,7 @@ def labtechify(src, dst, female=False, coat_scale=1.8):
     from PIL import Image
     tags, n = add_gauntlet(tags)
     added += n
+    tags = add_anim_aliases(tags)
     s.tags = tags
     swf.write_swf(s, dst)
     return changed, added

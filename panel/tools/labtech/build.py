@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.join(HERE, '..'))
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..', '..', 'world', 'labtech')))
 
 import art  # noqa: E402
+import celebs  # noqa: E402
 import classe13  # noqa: E402
 import content as C  # noqa: E402
 import mapgen  # noqa: E402
@@ -31,7 +32,7 @@ CLIENT = mapgen.CLIENT
 BACKUP = os.path.join(ROOT, 'backup', 'labtech')
 GAME_CONFIG = os.path.join(ROOT, 'server', 'game', 'game.config.properties')
 PANEL_DATA = os.path.abspath(os.path.join(HERE, '..', '..', 'data'))
-LANG_VERSION_BUMP = 480
+LANG_VERSION_BUMP = 520
 WORLD_TILE = (2, -1)
 
 log = print
@@ -732,6 +733,9 @@ def main():
         build_world_tile(specs)
     if '--sem-classe' not in args:
         classe13.build(C.CLASS13, log)
+    celebs.build(C.CELEB_SPRITES, classe13.CLIENTS, log)   # personagem proprio de cada celebridade
+    from PIL import Image as _Img   # retrato no dialogo (celebridades e o Estagiario)
+    celebs.build_portraits(C.CELEB_SPRITES, classe13.CLIENTS, [(C.NPCS[1]['gfx'], _Img.open(os.path.join(C.ART_GERADO, 'drone.png')))], log)
     # mapa inicial de todo personagem novo
     backup_once(GAME_CONFIG)
     cfg = open(GAME_CONFIG, encoding='utf-8').read()

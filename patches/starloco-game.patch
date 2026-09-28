@@ -194,8 +194,27 @@ index 4fd74d5..3670c0c 100644
      private static boolean command(String msg, String command) {
          return msg.length() > command.length() && msg.substring(1, command.length() + 1).equalsIgnoreCase(command);
      }
+diff --git a/src/org/starloco/locos/data/translation/pt_PT.yaml b/src/org/starloco/locos/data/translation/pt_PT.yaml
+index adca644..ba7e8fd 100644
+--- a/src/org/starloco/locos/data/translation/pt_PT.yaml
++++ b/src/org/starloco/locos/data/translation/pt_PT.yaml
+@@ -1,4 +1,4 @@
+-﻿area.map.gamecase.startaction.idnull: "Error action id null."
++area.map.gamecase.startaction.idnull: "Error action id null."
+ area.map.gamecase.startaction.current.action: "Ya tienes una acción en progreso. Informe si el problema persiste."
+ area.map.gamecase.startaction.fountain: "La magia funciona y le ofrece su máxima salud.."
+ area.map.gamecase.startaction.house.broken: "La casa está rota. Póngase en contacto con un administrador en el foro."
+@@ -66,7 +66,7 @@ client.player.learnspell.exist: "Ya tienes este hechizo."
+ client.player.onjoingame.startmessage: "¡Bienvenido a DUBG! \n <b>.battle </b> - únete a un modo de juego \n <b>.help </b> - para obtener más información"
+ client.player.onjoingame.startmessage.battle: "(#1) jugadores en el SURVIVAL \n (#2) jugadores en DUBG \n (#3) jugadores en BATTLEROYAL \n (#4) en el mundo de Dofus"
+ client.player.useprisme.nokamas: "No tienes suficientes Kamas para realizar esta acción."
+-client.player.onjoingame.welcome: "El jugador #1 acaba de iniciar sesión."
++client.player.onjoingame.welcome: "O jogador #1 acabou de entrar."
+ 
+ client.account.addfriend.notexist.account: "La cuenta no existe."
+ client.account.addfriend.notexist.player: "El jugador no existe."
 diff --git a/src/org/starloco/locos/game/GameClient.java b/src/org/starloco/locos/game/GameClient.java
-index 39f2a30..9e21922 100644
+index 39f2a30..cc3533c 100644
 --- a/src/org/starloco/locos/game/GameClient.java
 +++ b/src/org/starloco/locos/game/GameClient.java
 @@ -5892,7 +5892,7 @@ public class GameClient {
@@ -225,6 +244,40 @@ index 39f2a30..9e21922 100644
              SocketManager.GAME_SEND_Im_PACKET(this.player, "119|43");
              return;
          }
+@@ -6881,6 +6881,25 @@ public class GameClient {
+         }
+     }
+ 
++    /** Motivo de nao poder aumentar o feitico (nivel maximo, nivel do personagem ou pontos), em portugues. */
++    private String spellBoostReason(int id) {
++        Spell spell = World.world.getSort(id);
++        Spell.SortStats atual = this.player.getSortStatBySortIfHas(id);
++        if (spell == null || atual == null)
++            return "Voc\u00ea ainda n\u00e3o conhece este feiti\u00e7o.";
++        int nivel = atual.getLevel();
++        if (nivel >= 6)
++            return "Este feiti\u00e7o j\u00e1 est\u00e1 no n\u00edvel m\u00e1ximo (6).";
++        Spell.SortStats prox = spell.getStatsByLevel(nivel + 1);
++        int req = prox != null ? prox.getReqLevel() : 0;
++        if (req > this.player.getLevel())
++            return "Para subir este feiti\u00e7o ao n\u00edvel " + (nivel + 1) + " voc\u00ea precisa ser n\u00edvel " + req
++                    + " (voc\u00ea \u00e9 n\u00edvel " + this.player.getLevel() + ").";
++        if (this.player.get_spellPts() < nivel)
++            return "Faltam pontos de feiti\u00e7o: o n\u00edvel " + (nivel + 1) + " custa " + nivel + " ponto(s) e voc\u00ea tem "
++                    + this.player.get_spellPts() + ".";
++        return "N\u00e3o foi poss\u00edvel aumentar este feiti\u00e7o.";
++    }
+     private void boostSpell(String packet) {
+         try {
+             int id = Integer.parseInt(packet.substring(2));
+@@ -6890,6 +6909,7 @@ public class GameClient {
+                 SocketManager.GAME_SEND_STATS_PACKET(this.player);
+             } else {
+                 SocketManager.GAME_SEND_SPELL_UPGRADE_FAILED(this);
++                this.player.sendMessage(spellBoostReason(id));
+             }
+         } catch (NumberFormatException e) {
+             e.printStackTrace();
 diff --git a/src/org/starloco/locos/game/world/World.java b/src/org/starloco/locos/game/world/World.java
 index a9c8de6..195dda8 100644
 --- a/src/org/starloco/locos/game/world/World.java
@@ -610,10 +663,10 @@ index 0000000..a43918c
 +}
 diff --git a/src/org/starloco/locos/panel/PanelBridge.java b/src/org/starloco/locos/panel/PanelBridge.java
 new file mode 100644
-index 0000000..4e360e4
+index 0000000..83f67f6
 --- /dev/null
 +++ b/src/org/starloco/locos/panel/PanelBridge.java
-@@ -0,0 +1,183 @@
+@@ -0,0 +1,191 @@
 +package org.starloco.locos.panel;
 +
 +import org.starloco.locos.client.Player;
@@ -645,6 +698,7 @@ index 0000000..4e360e4
 +    public final static PanelBridge instance = new PanelBridge(1000);
 +
 +    private Connection connection;
++    private boolean staleCleared = false;
 +
 +    public PanelBridge(int wait) {
 +        super(wait);
@@ -660,6 +714,13 @@ index 0000000..4e360e4
 +                        "id INT AUTO_INCREMENT PRIMARY KEY, player VARCHAR(30) NOT NULL, command TEXT NOT NULL, " +
 +                        "status VARCHAR(16) NOT NULL DEFAULT 'pending', result TEXT, " +
 +                        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, done_at TIMESTAMP NULL)");
++                if (!staleCleared) {
++                    // Comandos de servidor (SAVE/STOP) que sobraram de antes deste servidor ligar nao valem mais:
++                    // um STOP antigo derrubaria o servidor logo depois de iniciar.
++                    st.execute("UPDATE panel_commands SET status = 'expired', result = 'servidor reiniciado antes', " +
++                            "done_at = NOW() WHERE player = '*' AND status = 'pending'");
++                    staleCleared = true;
++                }
 +            }
 +        }
 +        return connection;
@@ -824,3 +885,19 @@ index 2ae201a..9f3faa7 100644
      @SuppressWarnings("unused")
      private static SAccount account(Player p) { return p.getAccount().scripted(); }
  
+diff --git a/src/resources/translations/pt_PT.yaml b/src/resources/translations/pt_PT.yaml
+index 7b2add6..f9e497d 100644
+--- a/src/resources/translations/pt_PT.yaml
++++ b/src/resources/translations/pt_PT.yaml
+@@ -14,9 +14,9 @@ client.player.jail.free.wait: "Tienes que esperar otro #1 segundo en la cárcel.
+ client.player.jail.ask.waiting: "¡Estás en la cárcel! <br/> Así que tendrás que esperar unos minutos antes de que puedas salir. <br/> Habla con el guardia de la prisión para obtener más información."
+ client.player.event.start.join: "(<b> Info </b>): el evento #1 ha comenzado, se registra con <b>.event </b>."
+ client.player.learnspell.exist: "Ya tienes este hechizo."
+-client.player.onjoingame.startmessage: "¡Bienvenido a StarLoco!"
++client.player.onjoingame.startmessage: "Bem-vindo ao LabTech 1.29!"
+ client.player.useprisme.nokamas: "No tienes suficientes Kamas para realizar esta acción."
+-client.player.onjoingame.welcome: "El jugador #1 acaba de iniciar sesión."
++client.player.onjoingame.welcome: "O jogador #1 acabou de entrar."
+ 
+ client.account.addfriend.notexist.account: "La cuenta no existe."
+ client.account.addfriend.notexist.player: "El jugador no existe."

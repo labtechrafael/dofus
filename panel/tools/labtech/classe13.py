@@ -259,7 +259,7 @@ def concept_images():
     return imgs
 
 
-def sprite_portraits(sprite_dir, imgs, pose='staticR', zoom=10):
+def sprite_portraits(sprite_dir, imgs, pose='staticR', zoom=20):
     """Retratos no estilo do jogo: renderiza o proprio boneco remodelado (vetor do Dofus) com o JPEXS e recorta
     busto (cabeca ate a cintura) e rosto. Substitui os recortes da arte conceitual (pixel art)."""
     import subprocess, tempfile, glob
@@ -294,7 +294,7 @@ def sprite_portraits(sprite_dir, imgs, pose='staticR', zoom=10):
         a = full.split()[3].point(lambda v: 255 if v > 200 else 0)    # sombra no chao e translucida: fica de fora
         full = full.crop(a.getbbox())
         w, h = full.size
-        bust = full.crop((0, 0, w, int(h * 0.56)))
+        bust = full.crop((0, 0, w, int(h * 0.60)))
         bust = bust.crop(bust.getbbox())
         face = full.crop((0, 0, w, int(h * 0.34)))
         face = face.crop(face.getbbox())
@@ -399,7 +399,7 @@ def _fit(img, box, mode='contain'):
     w, h = int(iw * scale), int(ih * scale)
     cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
     # resolucao do bitmap: ~1 pixel por 20 twips * 2 (nitidez)
-    px_w = max(8, min(iw, int(w / 20 * 2)))
+    px_w = max(8, min(iw, int(w / 20 * 6)))   # 6 px por unidade: a arte e ampliada no inicio do turno
     px_h = max(8, int(px_w * ih / iw))
     return img.resize((px_w, px_h), Image.LANCZOS), (cx - w // 2, cx + w // 2, cy - h // 2, cy + h // 2)
 
