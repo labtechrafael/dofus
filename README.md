@@ -25,7 +25,8 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
 - **Arquipélago LabTech**: laboratório, praça, cervejaria, oficina, estufa, museu, arena, forja do Dofus
   Fermentado e o **Bar das Celebridades**: 20 famosos em versão paródia, cada um com personagem e retrato próprios
   e uma história escrachada de onde veio.
-- **Itens próprios**: Manopla Gambiarra Mk I e Mk XII, Caneca da Gambiarra, Drone de IA (familiar), Conjunto
+- **Itens próprios**: Manopla Gambiarra Mk I e Mk XII, Caneca da Gambiarra, Drone de IA (o familiar que fala e comenta
+  onde você está, os monstros e as lutas), Conjunto
   Jaleco LabTech, cervejas e o Dofus Fermentado.
 - **Mercadores em Bonta e Brâkmar**, ao lado do zaap, que vendem todos os itens do jogo.
 - **Regras do servidor local**:
@@ -117,6 +118,7 @@ O instalador baixa sozinho, das fontes oficiais:
 | Onde | Comando | O que faz |
 |---|---|---|
 | Chat | `.raca feca` … `.raca pandawa` | Monta a barra de feitiços com os feitiços daquela classe |
+| Chat | `.drone` (`.drone mudo`, `.drone volta`) | O Drone de IA fala na hora (ou fica quieto) |
 | Console de admin | `ITEM 10207` | Dá o molho de chaves (entra em qualquer masmorra) |
 | Console de admin | `ALIGN 1` e depois `HONOR 18000` | Bonta com grau 10 (`ALIGN 2` = Brâkmar) |
 | Menu de admin do cliente | (já traduzido) | Níveis, feitiços, teleporte, grupos de monstros, alinhamento… |

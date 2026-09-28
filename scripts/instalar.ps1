@@ -154,6 +154,9 @@ if (-not $ok) { Falha 'nao consegui instalar o painel ou criar as contas' }
 
 # ------------------------------------------------------------------ 8. Mundo LabTech
 Passo '8/9 Gerando o Mundo LabTech e a classe 13 no seu cliente (alguns minutos)'
+# o build le os textos originais do jogo (classes, itens, mapas, monstros, feiticos) extraidos do cliente
+python (Join-Path $root 'panel\tools\extrair_lang.py')
+if ($LASTEXITCODE) { Falha 'nao consegui extrair os textos do jogo' }
 python (Join-Path $root 'panel\tools\labtech\build.py')
 if ($LASTEXITCODE) { Falha 'o build do Mundo LabTech falhou' }
 python (Join-Path $root 'panel\tools\labtech\menuadmin_pt.py')

@@ -190,6 +190,12 @@ A Lúpula, na Praça da Gambiarra, vende as seis peças.
 inteligência, sabedoria, agilidade, prospecção ou sorte). Sem cerveja e sem carinho, vira "Drone de IA Desligado".
 A Lúpula vende o drone por 5000 kamas.
 
+**Ele fala.** Equipado, o drone comenta sozinho, como um item vivo: balão em cima do personagem e a frase no chat.
+Ele olha o contexto: o mapa da ilha, a região e a subárea do mundo, os monstros do mapa (com falas para cada família
+e para os chefes dos núcleos), o começo e o fim das lutas e cada nível novo. No meio disso, conta histórias do LabTech.
+No chat, `.drone` faz ele falar na hora, `.drone mudo` cala e `.drone volta` libera. Todas as falas estão em
+[HISTORIAS.md](HISTORIAS.md#o-drone-de-ia-fala).
+
 ### Dofus Fermentado
 
 +1 PA, +1 PM, +100 em cada atributo (vitalidade, sabedoria, força, inteligência, sorte e agilidade),

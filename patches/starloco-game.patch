@@ -59,7 +59,7 @@ index ddacb51..20217e8 100644
  
  JobLevelExp = { 0, 50, 140, 271, 441, 653, 905, 1199, 1543, 1911, 2330, 2792, 3297, 3840, 4439, 5078, 5762, 6493, 7280, 8097, 8980, 9898, 10875, 11903, 12985, 14122, 15315, 16564, 17873, 19242, 20672, 22166, 23726, 25353, 27048, 28815, 30656, 32572, 34566, 36641, 38800, 41044, 43378, 45804, 48325, 50946, 53669, 56498, 59437, 62491, 65664, 68960, 72385, 75943, 79640, 83482, 87475, 91624, 95937, 100421, 105082, 109930, 114971, 120215, 125671, 131348, 137256, 143407, 149811, 156481, 163429, 170669, 178214, 186080, 194283, 202839, 211765, 221082, 230808, 240964, 251574, 262660, 274248, 286364, 299037, 312297, 326175, 340705, 355924, 371870, 388582, 406106, 424486, 443772, 464016, 485274, 507604, 531071, 555541, 581687}
 diff --git a/src/org/starloco/locos/client/Player.java b/src/org/starloco/locos/client/Player.java
-index 6ba6d0f..caac550 100644
+index 6ba6d0f..c5784de 100644
 --- a/src/org/starloco/locos/client/Player.java
 +++ b/src/org/starloco/locos/client/Player.java
 @@ -509,7 +509,7 @@ public class Player implements Scripted<SPlayer>, Actor {
@@ -161,7 +161,7 @@ index 6ba6d0f..caac550 100644
          SocketManager.GAME_SEND_Rx_PACKET(this);
          SocketManager.GAME_SEND_ASK(client, this);
  
-@@ -1883,6 +1943,10 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -1883,6 +1943,11 @@ public class Player implements Scripted<SPlayer>, Actor {
          //Actualisation dans la DB
          DatabaseManager.get(AccountData.class).updateLastConnection(getAccount());
          SocketManager.GAME_SEND_MESSAGE(this, Config.startMessage.isEmpty() ? this.getLang().trans("client.player.onjoingame.startmessage") : Config.startMessage);
@@ -169,10 +169,11 @@ index 6ba6d0f..caac550 100644
 +            sendMessage(tirados + (tirados == 1 ? " item acima do seu n\u00edvel voltou" : " itens acima do seu n\u00edvel voltaram") + " para a bolsa.");
 +        if (novos != null && !novos.isEmpty())
 +            sendMessage("Manopla recalibrada: " + novos.size() + (novos.size() == 1 ? " feiti\u00e7o novo liberado" : " feiti\u00e7os novos liberados") + " para o seu n\u00edvel.");
++        org.starloco.locos.panel.DroneTalk.onLogin(this); // Mundo LabTech: o Drone de IA cumprimenta
          for (GameObject object : this.objects.values()) {
              if (object.getTemplate().getType() == Constant.ITEM_TYPE_FAMILIER) {
                  PetEntry p = World.world.getPetsEntry(object.getGuid());
-@@ -2337,6 +2401,7 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -2337,6 +2402,7 @@ public class Player implements Scripted<SPlayer>, Actor {
      }
  
      public int getMaxPod() {
@@ -180,6 +181,14 @@ index 6ba6d0f..caac550 100644
          Stats total = new Stats(false, null);
          total = Stats.cumulStat(total, this.getStats());
          total = Stats.cumulStat(total, this.getStuffStats());
+@@ -2751,6 +2817,7 @@ public class Player implements Scripted<SPlayer>, Actor {
+         if (this.getLevel() == 100)
+             this.getStats().addOneStat(Constant.STATS_ADD_PA, 1);
+         Constant.onLevelUpSpells(this, this.getLevel());
++        if (isOnline) org.starloco.locos.panel.DroneTalk.onLevelUp(this); // Mundo LabTech: o drone comenta
+         if (addXp)
+             this.exp =  xpTable.minXpAt(this.getLevel());
+         if (send && isOnline) {
 diff --git a/src/org/starloco/locos/command/CommandAdmin.java b/src/org/starloco/locos/command/CommandAdmin.java
 index e7289cd..dd3d954 100644
 --- a/src/org/starloco/locos/command/CommandAdmin.java
@@ -194,10 +203,10 @@ index e7289cd..dd3d954 100644
                  return "Unk";
          }
 diff --git a/src/org/starloco/locos/command/CommandPlayer.java b/src/org/starloco/locos/command/CommandPlayer.java
-index 4fd74d5..20027a2 100644
+index 4fd74d5..0c91231 100644
 --- a/src/org/starloco/locos/command/CommandPlayer.java
 +++ b/src/org/starloco/locos/command/CommandPlayer.java
-@@ -47,6 +47,28 @@ public class CommandPlayer {
+@@ -47,6 +47,34 @@ public class CommandPlayer {
                  return commandInterval(player, msg);
              } else if(command(msg, "start") || command(msg, "astrub")) {
                  return commandAstrub(player, msg);
@@ -216,6 +225,12 @@ index 4fd74d5..20027a2 100644
 +                        player.sendMessage("Ainda bloqueados (liberam ao subir de n\u00edvel): " + String.join(", ", falta) + ".");
 +                }
 +                return true;
++            } else if (command(msg, "drone")) {
++                // Mundo LabTech: .drone faz o Drone de IA falar; .drone mudo / .drone volta
++                String[] parts = msg.trim().split("\\s+", 2);
++                String resp = org.starloco.locos.panel.DroneTalk.comando(player, parts.length > 1 ? parts[1] : "");
++                if (resp != null) player.sendMessage(resp);
++                return true;
 +            } else if (isLabTechSecretCode(msg)) {
 +                // Mundo LabTech: codigo secreto no Laboratorio leva a Forja do Dofus
 +                if (LABTECH_SECRET_FROM.contains((int) player.getCurMap().getId()) && player.getFight() == null)
@@ -226,7 +241,7 @@ index 4fd74d5..20027a2 100644
              } else if(command(msg, "walkfast")) {
                  player.walkFast = !player.walkFast;
                  return true;
-@@ -499,6 +521,16 @@ public class CommandPlayer {
+@@ -499,6 +527,16 @@ public class CommandPlayer {
          return true;
      }
  
@@ -262,6 +277,28 @@ index adca644..ba7e8fd 100644
  
  client.account.addfriend.notexist.account: "La cuenta no existe."
  client.account.addfriend.notexist.player: "El jugador no existe."
+diff --git a/src/org/starloco/locos/fight/Fight.java b/src/org/starloco/locos/fight/Fight.java
+index 36c6784..d507573 100644
+--- a/src/org/starloco/locos/fight/Fight.java
++++ b/src/org/starloco/locos/fight/Fight.java
+@@ -1162,6 +1162,8 @@ public class Fight {
+         this.checkTimer = false;
+         SocketManager.GAME_SEND_GIC_PACKETS_TO_FIGHT(this, 7);
+         SocketManager.GAME_SEND_GS_PACKET_TO_FIGHT(this, 7);
++        if (getType() == Constant.FIGHT_TYPE_PVM)
++            org.starloco.locos.panel.DroneTalk.onFightStart(this); // Mundo LabTech: o drone comenta a luta
+         initOrderPlaying();
+         setCurPlayer(-1);
+         SocketManager.GAME_SEND_GTL_PACKET_TO_FIGHT(this, 7);
+@@ -3859,6 +3861,8 @@ public class Fight {
+                     this.winners.addAll(copyTeam0.values());
+                     losers.addAll(copyTeam1.values());
+                 }
++                if (Constant.FIGHT_TYPE_PVM == this.type)
++                    org.starloco.locos.panel.DroneTalk.onFightEnd(this, this.winners); // Mundo LabTech
+ 
+ 
+                 if (Constant.FIGHT_TYPE_PVM == this.type) {
 diff --git a/src/org/starloco/locos/game/GameClient.java b/src/org/starloco/locos/game/GameClient.java
 index 39f2a30..cc3533c 100644
 --- a/src/org/starloco/locos/game/GameClient.java
@@ -540,7 +577,7 @@ index b741cb4..029cc55 100644
                  return "Osamodas";
              case CLASS_IOP:
 diff --git a/src/org/starloco/locos/kernel/Main.java b/src/org/starloco/locos/kernel/Main.java
-index f6e5e5f..7aa148f 100644
+index f6e5e5f..1bc8aa1 100644
 --- a/src/org/starloco/locos/kernel/Main.java
 +++ b/src/org/starloco/locos/kernel/Main.java
 @@ -89,7 +89,7 @@ public class Main {
@@ -548,7 +585,7 @@ index f6e5e5f..7aa148f 100644
  	        final List<Updatable> updatables = Arrays.asList(
  	                WorldSave.instance, GameMap.updatable, Mount.updatable,
 -                    WorldPub.instance,
-+                    WorldPub.instance, org.starloco.locos.panel.PanelBridge.instance,
++                    WorldPub.instance, org.starloco.locos.panel.PanelBridge.instance, org.starloco.locos.panel.DroneTalk.instance,
                      AuctionManager.getInstance(), /*Tavernier.getInstance(),*/ EventManager.getInstance());
  
              while (Config.isRunning) {
@@ -756,6 +793,380 @@ index 0000000..4b18e01
 +        List<String> out = new ArrayList<>();
 +        for (int i : idx) out.add(NOMES[classIndex][i] + " (nv. " + LEARN[classIndex][i] + ")");
 +        return out;
++    }
++}
+diff --git a/src/org/starloco/locos/panel/DroneTalk.java b/src/org/starloco/locos/panel/DroneTalk.java
+new file mode 100644
+index 0000000..efc901c
+--- /dev/null
++++ b/src/org/starloco/locos/panel/DroneTalk.java
+@@ -0,0 +1,368 @@
++package org.starloco.locos.panel;
++
++import org.starloco.locos.area.SubArea;
++import org.starloco.locos.area.map.GameMap;
++import org.starloco.locos.client.Player;
++import org.starloco.locos.common.SocketManager;
++import org.starloco.locos.entity.monster.MonsterGrade;
++import org.starloco.locos.entity.monster.MonsterGroup;
++import org.starloco.locos.fight.Fight;
++import org.starloco.locos.fight.Fighter;
++import org.starloco.locos.game.scheduler.Updatable;
++import org.starloco.locos.game.world.World;
++import org.starloco.locos.kernel.Constant;
++import org.starloco.locos.kernel.Main;
++import org.starloco.locos.object.GameObject;
++
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.nio.file.Paths;
++import java.util.*;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ThreadLocalRandom;
++
++/**
++ * Mundo LabTech: o Drone de IA (familiar 30024) fala sozinho, como um item vivo. Ele olha onde o dono est\u00e1 (mapa da
++ * ilha, regi\u00e3o, sub\u00e1rea), os monstros do mapa, a luta e o n\u00edvel, e comenta no chat ("Drone de IA : ..."), com bal\u00e3o
++ * em cima do personagem fora das lutas. As falas v\u00eam de scripts/labtech/drone_falas.tsv, gerado de content.py
++ * (DRONE); o arquivo \u00e9 relido quando muda, ent\u00e3o d\u00e1 para trocar as falas sem reiniciar.
++ */
++public class DroneTalk extends Updatable<Void> {
++
++    public static final DroneTalk instance = new DroneTalk(2000);
++
++    private static final int DRONE = 30024;
++    private static final String NOME = "Drone de IA";
++    private static final Path ARQUIVO = Paths.get("scripts", "labtech", "drone_falas.tsv");
++    private static final long PAUSA_EVENTOS = 60_000;   // luta: no m\u00e1ximo um coment\u00e1rio por minuto
++
++    private final Map<String, List<String>> falas = new HashMap<>();   // "grupo" ou "grupo:chave" -> frases
++    private final Map<String, String> nomes = new HashMap<>();         // "mob:id", "sa:id", "area:id" -> nome
++    private final List<String> familias = new ArrayList<>();           // chaves de fam\u00edlia de monstro, maiores antes
++    private long lidoEm = -1;
++    private int minSeg = 150, maxSeg = 300;
++
++    private final Map<Integer, Long> proxima = new ConcurrentHashMap<>();
++    private final Map<Integer, Evento> pendente = new ConcurrentHashMap<>();
++    private final Map<Integer, Long> ultimoEvento = new ConcurrentHashMap<>();
++    private final Map<Integer, Deque<String>> recentes = new ConcurrentHashMap<>();
++    private final Set<Integer> mudos = ConcurrentHashMap.newKeySet();
++
++    private static class Evento {
++        final long hora;
++        final String texto;
++
++        Evento(long hora, String texto) {
++            this.hora = hora;
++            this.texto = texto;
++        }
++    }
++
++    public DroneTalk(int wait) {
++        super(wait);
++    }
++
++    @Override
++    public void update() {
++        if (!this.verify()) return;
++        carregar();
++        if (falas.isEmpty()) return;
++        long agora = System.currentTimeMillis();
++        for (Player p : new ArrayList<>(World.world.getOnlinePlayers())) {
++            if (p == null) continue;
++            int id = p.getId();
++            if (!temDrone(p)) {
++                proxima.remove(id);
++                pendente.remove(id);
++                continue;
++            }
++            Evento ev = pendente.get(id);
++            if (ev != null) {
++                if (agora >= ev.hora) {
++                    pendente.remove(id);
++                    dizer(p, ev.texto);
++                }
++                continue;
++            }
++            if (p.getFight() != null) continue;
++            Long hora = proxima.get(id);
++            if (hora == null) {
++                agendar(id, agora);
++            } else if (agora >= hora) {
++                agendar(id, agora);
++                dizer(p, contexto(p));
++            }
++        }
++    }
++
++    // ------------------------------------------------------------------ eventos do jogo
++
++    public static void onLogin(Player p) {
++        instance.evento(p, instance.frase(p, "login", null), 9000, false);
++    }
++
++    public static void onLevelUp(Player p) {
++        instance.evento(p, instance.frase(p, "nivel", null), 1500, false);
++    }
++
++    /** Come\u00e7o de uma luta contra monstros: comenta o mais forte do outro lado (ou o chefe de um n\u00facleo). */
++    public static void onFightStart(Fight fight) {
++        MonsterGrade alvo = null;
++        int qtd = 0;
++        for (Fighter f : fight.getFighters(3)) {
++            MonsterGrade m = f.getMob();
++            if (m == null || f.isInvocation()) continue;
++            qtd++;
++            if (alvo == null || instance.tem("nucleo:" + m.getTemplate().getId()) || m.getLevel() > alvo.getLevel()
++                    && !instance.tem("nucleo:" + alvo.getTemplate().getId()))
++                alvo = m;
++        }
++        if (alvo == null) return;
++        for (Player p : jogadores(fight)) {
++            if (!instance.tem("nucleo:" + alvo.getTemplate().getId()) && ThreadLocalRandom.current().nextInt(100) >= 50)
++                continue;
++            String texto;
++            if (instance.tem("nucleo:" + alvo.getTemplate().getId())) {
++                texto = instance.frase(p, "nucleo:" + alvo.getTemplate().getId(), null);
++            } else {
++                Map<String, String> v = instance.vars(p);
++                v.put("mob", instance.nomeMob(alvo));
++                v.put("nivel_mob", String.valueOf(alvo.getLevel()));
++                v.put("qtd", String.valueOf(qtd));
++                texto = instance.frase(p, "luta_inicio", v);
++            }
++            instance.evento(p, texto, 2500, true);
++        }
++    }
++
++    /** Fim de uma luta contra monstros: vit\u00f3ria \u00e0s vezes, derrota sempre (o drone consola). */
++    public static void onFightEnd(Fight fight, Collection<Fighter> vencedores) {
++        MonsterGrade alvo = null;
++        for (Fighter f : fight.getFighters(3)) {
++            MonsterGrade m = f.getMob();
++            if (m != null && !f.isInvocation() && (alvo == null || m.getLevel() > alvo.getLevel()))
++                alvo = m;
++        }
++        Set<Integer> ganhou = new HashSet<>();
++        for (Fighter f : vencedores)
++            if (f != null && f.getPlayer() != null) ganhou.add(f.getPlayer().getId());
++        for (Player p : jogadores(fight)) {
++            boolean venceu = ganhou.contains(p.getId());
++            if (venceu && ThreadLocalRandom.current().nextInt(100) >= 40) continue;
++            Map<String, String> v = instance.vars(p);
++            v.put("mob", alvo != null ? instance.nomeMob(alvo) : "o monstro");
++            v.put("nivel_mob", alvo != null ? String.valueOf(alvo.getLevel()) : "?");
++            instance.ultimoEvento.remove(p.getId());   // o fim da luta sempre pode comentar
++            instance.evento(p, instance.frase(p, venceu ? "luta_vitoria" : "luta_derrota", v), 4000, true);
++        }
++    }
++
++    /** Comando .drone: fala agora; ".drone mudo" cala; ".drone volta" libera. Devolve a resposta para o chat. */
++    public static String comando(Player p, String arg) {
++        String a = arg == null ? "" : arg.trim().toLowerCase();
++        if (a.startsWith("mudo") || a.startsWith("quieto") || a.startsWith("sil")) {
++            instance.mudos.add(p.getId());
++            return "O Drone de IA ficou quieto. Use .drone volta para ele voltar a falar.";
++        }
++        if (a.startsWith("volta") || a.startsWith("fala")) {
++            instance.mudos.remove(p.getId());
++            return "O Drone de IA voltou a falar.";
++        }
++        if (!temDrone(p)) return "Equipe o Drone de IA como familiar para ele falar.";
++        if (instance.mudos.contains(p.getId())) return "O Drone de IA est\u00e1 quieto. Use .drone volta.";
++        instance.carregar();
++        instance.agendar(p.getId(), System.currentTimeMillis());
++        instance.dizer(p, instance.contexto(p));
++        return null;
++    }
++
++    // ------------------------------------------------------------------ o que dizer
++
++    private String contexto(Player p) {
++        GameMap map = p.getCurMap();
++        if (map == null) return frase(p, "geral", null);
++        ThreadLocalRandom r = ThreadLocalRandom.current();
++        String chaveMapa = "mapa:" + map.getId();
++        if (tem(chaveMapa)) return r.nextInt(100) < 55 ? frase(p, chaveMapa, null) : frase(p, "geral", null);
++        int sorteio = r.nextInt(100);
++        MonsterGrade mob = sorteio < 40 ? mobDoMapa(map) : null;
++        if (mob != null) return sobreMob(p, mob);
++        if (sorteio < 75) return sobreLocal(p, map);
++        return frase(p, "geral", null);
++    }
++
++    private String sobreLocal(Player p, GameMap map) {
++        SubArea sa = map.getSubArea();
++        int areaId = sa != null && sa.getArea() != null ? sa.getArea().getId() : -1;
++        String saNome = sa != null ? nomes.get("sa:" + sa.getId()) : null;
++        String areaNome = nomes.get("area:" + areaId);
++        boolean temArea = tem("area:" + areaId);
++        if (saNome == null && areaNome == null && !temArea) return frase(p, "geral", null);
++        Map<String, String> v = vars(p);
++        v.put("subarea", saNome != null ? saNome : areaNome != null ? areaNome : "este lugar");
++        v.put("area", areaNome != null ? areaNome : "algum canto do mundo");
++        if (temArea && (saNome == null || ThreadLocalRandom.current().nextInt(100) < 60))
++            return frase(p, "area:" + areaId, v);
++        return frase(p, "local", v);
++    }
++
++    private String sobreMob(Player p, MonsterGrade mob) {
++        int id = mob.getTemplate().getId();
++        if (tem("nucleo:" + id)) return frase(p, "nucleo:" + id, null);
++        String nome = nomeMob(mob);
++        Map<String, String> v = vars(p);
++        v.put("mob", nome);
++        v.put("nivel_mob", String.valueOf(mob.getLevel()));
++        String familia = familia(nome);
++        if (familia != null && ThreadLocalRandom.current().nextInt(100) < 65) return frase(p, "mob:" + familia, v);
++        int dif = mob.getLevel() - p.getLevel();
++        if (dif > 20) return frase(p, "mob_forte", v);
++        if (dif < -30) return frase(p, "mob_fraco", v);
++        return frase(p, "mob_generico", v);
++    }
++
++    private MonsterGrade mobDoMapa(GameMap map) {
++        try {
++            List<MonsterGrade> todos = new ArrayList<>();
++            for (MonsterGroup g : new ArrayList<>(map.getMobGroups().values()))
++                if (g != null) todos.addAll(g.getMobs().values());
++            todos.removeIf(Objects::isNull);
++            return todos.isEmpty() ? null : todos.get(ThreadLocalRandom.current().nextInt(todos.size()));
++        } catch (Exception e) {
++            return null;
++        }
++    }
++
++    private String nomeMob(MonsterGrade m) {
++        String n = nomes.get("mob:" + m.getTemplate().getId());
++        return n != null ? n : "um monstro";
++    }
++
++    private String familia(String nome) {
++        String n = nome.toLowerCase();
++        for (String f : familias)
++            if (n.contains(f.toLowerCase())) return f;
++        return null;
++    }
++
++    private Map<String, String> vars(Player p) {
++        Map<String, String> v = new HashMap<>();
++        v.put("nome", p.getName());
++        v.put("nivel", String.valueOf(p.getLevel()));
++        return v;
++    }
++
++    /** Uma frase do grupo, evitando repetir as \u00faltimas, com os marcadores {x} preenchidos. */
++    private String frase(Player p, String grupo, Map<String, String> v) {
++        carregar();
++        List<String> lista = falas.get(grupo);
++        if (lista == null || lista.isEmpty()) lista = falas.get("geral");
++        if (lista == null || lista.isEmpty()) return null;
++        Deque<String> rec = recentes.computeIfAbsent(p.getId(), k -> new ArrayDeque<>());
++        String escolhida = null;
++        for (int i = 0; i < 8; i++) {
++            escolhida = lista.get(ThreadLocalRandom.current().nextInt(lista.size()));
++            if (!rec.contains(escolhida)) break;
++        }
++        rec.addLast(escolhida);
++        while (rec.size() > 12) rec.removeFirst();
++        Map<String, String> vars = v != null ? v : vars(p);
++        String texto = escolhida;
++        for (Map.Entry<String, String> e : vars.entrySet())
++            texto = texto.replace("{" + e.getKey() + "}", e.getValue());
++        return texto;
++    }
++
++    // ------------------------------------------------------------------ infraestrutura
++
++    private boolean tem(String grupo) {
++        List<String> l = falas.get(grupo);
++        return l != null && !l.isEmpty();
++    }
++
++    private static boolean temDrone(Player p) {
++        GameObject pet = p.getObjetByPos(Constant.ITEM_POS_FAMILIER);
++        return pet != null && pet.getTemplate() != null && pet.getTemplate().getId() == DRONE;
++    }
++
++    private static List<Player> jogadores(Fight fight) {
++        List<Player> out = new ArrayList<>();
++        for (Fighter f : fight.getFighters(3)) {
++            Player p = f.getPlayer();
++            if (p != null && f.getId() == p.getId() && p.isOnline() && temDrone(p) && !out.contains(p)) out.add(p);
++        }
++        return out;
++    }
++
++    private void agendar(int id, long agora) {
++        int seg = minSeg + ThreadLocalRandom.current().nextInt(Math.max(1, maxSeg - minSeg + 1));
++        proxima.put(id, agora + seg * 1000L);
++    }
++
++    private void evento(Player p, String texto, long atraso, boolean comPausa) {
++        if (p == null || texto == null || !temDrone(p)) return;
++        long agora = System.currentTimeMillis();
++        if (comPausa) {
++            Long ult = ultimoEvento.get(p.getId());
++            if (ult != null && agora - ult < PAUSA_EVENTOS) return;
++            ultimoEvento.put(p.getId(), agora);
++        }
++        pendente.put(p.getId(), new Evento(agora + atraso, texto));
++        long depois = agora + atraso + minSeg * 1000L / 2;
++        proxima.merge(p.getId(), depois, Math::max);
++    }
++
++    private void dizer(Player p, String texto) {
++        if (texto == null || texto.isEmpty() || mudos.contains(p.getId()) || !p.isOnline()) return;
++        SocketManager.send(p, "cMK|" + p.getId() + "|" + NOME + "|" + texto + "|");
++    }
++
++    private synchronized void carregar() {
++        long mod = -3;
++        try {
++            if (!Files.exists(ARQUIVO)) return;
++            mod = Files.getLastModifiedTime(ARQUIVO).toMillis();
++            if (mod == lidoEm) return;
++            Map<String, List<String>> f = new HashMap<>();
++            Map<String, String> n = new HashMap<>();
++            Set<String> fam = new HashSet<>();
++            for (String linha : Files.readAllLines(ARQUIVO, StandardCharsets.UTF_8)) {
++                if (linha.isEmpty() || linha.startsWith("#")) continue;
++                String[] c = linha.split("\t", 3);
++                if (c.length < 3) continue;
++                switch (c[0]) {
++                    case "config":
++                        if (c[1].equals("intervalo") && c[2].contains("-")) {
++                            String[] mm = c[2].split("-");
++                            minSeg = Integer.parseInt(mm[0].trim());
++                            maxSeg = Math.max(minSeg, Integer.parseInt(mm[1].trim()));
++                        }
++                        break;
++                    case "nome_mob": n.put("mob:" + c[1], c[2]); break;
++                    case "nome_sa": n.put("sa:" + c[1], c[2]); break;
++                    case "nome_area": n.put("area:" + c[1], c[2]); break;
++                    default:
++                        String chave = c[1].isEmpty() ? c[0] : c[0] + ":" + c[1];
++                        f.computeIfAbsent(chave, k -> new ArrayList<>()).add(c[2]);
++                        if (c[0].equals("mob")) fam.add(c[1]);
++                }
++            }
++            List<String> familiasOrdenadas = new ArrayList<>(fam);
++            familiasOrdenadas.sort((a, b) -> b.length() - a.length());
++            synchronized (this) {
++                falas.clear();
++                falas.putAll(f);
++                nomes.clear();
++                nomes.putAll(n);
++                familias.clear();
++                familias.addAll(familiasOrdenadas);
++            }
++            lidoEm = mod;
++            Main.logger.info("Drone de IA: " + f.values().stream().mapToInt(List::size).sum() + " falas carregadas");
++        } catch (Exception e) {
++            Main.logger.error("Drone de IA: falha ao ler " + ARQUIVO, e);
++            lidoEm = mod;   // tenta de novo quando o arquivo mudar
++        }
 +    }
 +}
 diff --git a/src/org/starloco/locos/panel/PanelBridge.java b/src/org/starloco/locos/panel/PanelBridge.java

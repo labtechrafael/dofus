@@ -12,6 +12,7 @@ Todas as falas de todos os personagens, gerado automaticamente a partir de
 - [Personagens da ilha](#personagens-da-ilha)
 - [Bar das Celebridades](#bar-das-celebridades)
 - [Mercadores LabTech](#mercadores-labtech)
+- [O Drone de IA fala](#o-drone-de-ia-fala)
 - [Itens e suas histórias](#itens-e-suas-histórias)
 
 ## A classe LabTech
@@ -614,6 +615,239 @@ Vinte famosos que amam cerveja, todos em versão paródia.
 
 **Prateleiras:** Chapéus, Capas e mochilas, Amuletos, Anéis, Cintos, Botas, Escudos, Dofus e Obvijevans, Familiares e montarias, Arcos e bestas, Varinhas, Cajados, Adagas, Espadas, Martelos, Pás, Machados, Ferramentas, picaretas e foices, Poções e pergaminhos, Pães, carnes, peixes e bebidas, Pedras de alma, chaves e runas, Transformações, bênçãos e outros, Recursos (parte 1 de 4), Recursos (parte 2 de 4), Recursos (parte 3 de 4), Recursos (parte 4 de 4).
 
+
+## O Drone de IA fala
+
+Equipado como familiar, o Drone de IA fala sozinho, como um item vivo: um balão em cima do personagem e a frase no chat. Ele olha onde você está, os monstros do mapa, a luta e o seu nível. No chat, `.drone` faz ele falar na hora, `.drone mudo` cala e `.drone volta` libera. Os trechos entre chaves viram o nome, o nível, o lugar ou o monstro do momento.
+
+**Ao entrar no jogo**
+
+> Sistema ligado. Bateria cheia, cerveja no tanque e zero bênçãos divinas. Bora, {nome}!  
+> Bom dia, {nome}! Enquanto você dormia eu li todos os pergaminhos do mundo. Metade era receita de cerveja.  
+> Drone de IA online. Carregando piadas... carregando histórias... carregando sarcasmo... 100%.  
+> Voltei! Sonhei que era um Dofus. Acordei e continuo sendo um cubo. Mas um cubo feliz.  
+
+**Ao subir de nível**
+
+> Nível {nivel}! Nenhum deus te deu isso. Foi na raça, na gambiarra e na cerveja.  
+> Subiu pro nível {nivel}! Vou anotar no meu log: "o humano está evoluindo". O Mestre Malte vai chorar.  
+> Nível {nivel}. Se continuar assim, os deuses vão pedir a SUA bênção.  
+> Nível {nivel}! Confere o livro de feitiços: a Manopla deve ter destravado coisa nova.  
+> Nível {nivel}. Eu cresço junto, sabia? Emocionalmente. Fisicamente eu continuo um cubo.  
+
+**Histórias do LabTech**
+
+> O primeiro LabTech pediu um poder aos deuses. Recebeu um "não" e um panfleto. Três noites de gambiarra depois, nasceu a Manopla.  
+> Malte é a estrutura, lúpulo é o caráter, levedura é a paciência. Eu sou o Wi-Fi.  
+> Os deuses chamam a Manopla de heresia. A gente chama de receita. O Mestre Malte chama de "meu bebê".  
+> Você sabia que a Manopla tem doze encaixes? Onze deles foram feitos com fita isolante. O décimo segundo é segredo industrial.  
+> Os dragões chocam os Dofus deles. A gente fermenta o nosso. Cheira pior, mas funciona melhor.  
+> O Estagiário do laboratório é o meu irmão mais velho. Ele trabalha 24 horas. Eu trabalho 24 horas e ainda carrego você.  
+> Às vezes eu invento coisas que não existem. Por exemplo: "o Iop leu o manual". Viu? Inventei.  
+> Na ilha LabTech ninguém ganha nome de deus. É Malte, Lúpula, Levedura... Eu queria me chamar Chopp. Negaram.  
+> A Dona Levedura guarda os kamas antes que eles virem engrenagem. Inventor gasta tudo em peça. Principalmente você.  
+> O Thor é bem-vindo na ilha porque bebe junto. O Dionísio também: os colegas dele dão poder, ele só dá ressaca. Honesto.  
+> Os deuses precisam mais de nós do que nós deles. Quem disse isso fui eu. Pode me citar.  
+> Lá no Bar das Celebridades tem um cientista que vive arrotando e falando de outras dimensões. Não aceite nenhum picles dele.  
+> No Museu dos Experimentos tem um dinossauro com uma bazuca. Ele aprendeu a pular cacto sozinho. Depois aprendeu a explodir cacto.  
+> Três cérebros no museu: NEAT, DQN e PPO. Eles brigam pra ver quem é mais inteligente. Eu fico quieto: sou a IA que funciona.  
+> Um dia me treinaram pra reconhecer boto. Eu confundi um tronco. Não foi erro: o tronco era muito charmoso.  
+> O código secreto do Laboratório envolve cima, cima, baixo, baixo... O resto eu não posso contar. Tá no manual que ninguém lê.  
+> O Fliperama da Taverna diz que a princesa está em outro laboratório. Faz anos que eu procuro. Nada.  
+> A Lúpula diz que lúpulo não é tempero, é engenharia de amargor. Eu concordo. Eu sou engenharia de fofura.  
+> Se me der uma Lager do Loot, eu fico mais esperto pra achar drop. Se me der duas, eu começo a cantar.  
+> Cerveja de verdade leva malte, lúpulo, levedura e paciência. A última eu não tenho. Já acabou?  
+> Eu calculei: a chance de um deus te ajudar hoje é de 0,0001%. A chance de uma gambiarra te ajudar é de 87%.  
+> O Mestre Malte montou a primeira Manopla numa cervejaria. Por isso ela cheira a cevada quando esquenta.  
+> Todo núcleo da Manopla guarda um pedaço de bênção "emprestada". Emprestada no sentido LabTech: sem data pra devolver.  
+> A Caneca da Gambiarra é um escudo. Sim, uma caneca. Sim, protege. Não, eu também não entendo a física.  
+> Eu fui feito pra analisar, escanear e projetar hologramas. Na prática, eu comento a sua vida. Tá valendo.  
+> Meu processador roda a 3 GHz e a 3 canecas. Acima de 4 canecas eu começo a falar dos meus sentimentos.  
+> Se alguém perguntar, a Manopla é "tecnologia proprietária". Se insistir, é arame, cobre e muita fé.  
+> Encontrei um encanador aposentado na cervejaria. Ele disse que pulava em tartaruga. Anotei como "lenda urbana".  
+> Lembra: no LabTech a gente só aperta reset e tenta de novo. Do zero. Com as próprias mãos. E comigo, claro.  
+> Você já reparou que eu flutuo? Eu também não sei como. O Mestre Malte disse "não mexe que funciona".  
+> Tenho 5000 de prospecção. Traduzindo: eu farejo loot como o Enutrof fareja kama.  
+> Consigo organizar dez invocações ao mesmo tempo. Chama os bichos que eu faço a planilha.  
+> Estou rodando um modelo de linguagem de última geração. Uso ele pra fazer trocadilho de cerveja. Prioridades.  
+> Relatório do dia: 0 bênçãos recebidas, 1 cerveja pendente, 100% de lealdade ao {nome}.  
+
+**Na ilha: Laboratorio LabTech**
+
+> Laboratório LabTech: onde tudo começou. Aquela mancha no chão é da primeira Manopla. Ou de cerveja. Provavelmente dos dois.  
+> O Mestre Malte está logo ali. Se ele oferecer uma cerveja experimental, recuse. Da última vez eu fiquei com o visor embaçado três dias.  
+
+**Na ilha: Praca da Gambiarra**
+
+> Praça da Gambiarra! O zaap daqui foi consertado com arame. Ainda assim é o mais pontual do mundo.  
+> A Lúpula vende o Conjunto Jaleco ali. E me vendeu. Eu custei 5000 kamas. Valho muito mais.  
+
+**Na ilha: Cervejaria Barril Gambiarra**
+
+> Cervejaria Barril Gambiarra. Cuidado com os barris na rampa: dizem que um macaco grande joga eles lá de cima.  
+> Cheiro de malte no ar. Meus sensores entram em modo feriado aqui dentro.  
+
+**Na ilha: Oficina das Proprias Maos**
+
+> Oficina das Próprias Mãos: 14 bancadas num lugar só. Os deuses nunca montaram uma oficina. Por isso não inventaram nada.  
+
+**Na ilha: Museu dos Experimentos**
+
+> Museu dos Experimentos: cada peça aqui é um vídeo do canal. Eu queria uma vitrine também. Estou negociando.  
+> Aquele dinossauro com bazuca me encara toda vez que eu passo. Acho que ele sabe que eu sou uma IA melhor.  
+
+**Na ilha: Arena LabTech**
+
+> Arena LabTech: os chefes mais cascudos do mundo, de graça. Recomendo beber antes, não durante.  
+
+**Na ilha: Estufa de Lupulo**
+
+> Estufa de Lúpulo: o Seu Lúpulo planta o que os deuses esqueceram de plantar. Aqui é tudo mais barato. Economia é engenharia.  
+
+**Na ilha: Forja do Dofus**
+
+> A Forja do Dofus! Poucos chegam aqui. Aqui o Mestre Malte fermenta o Dofus que nenhum dragão chocou.  
+
+**Na ilha: Bar das Celebridades**
+
+> Bar das Celebridades: vinte famosos, zero processos. Tudo paródia, tudo em nome da ciência.  
+> Se o gaulês de bigode oferecer uma poção, beba. Se o grandão pedir poção, NÃO dê.  
+
+**Na ilha: Campos de Teste**
+
+> Campo de Teste: aqui a gente testa Manopla, feitiço e paciência. O teste de paciência sempre falha.  
+> Monstros de laboratório. Nenhum foi ferido na criação deste mapa. Ainda.  
+
+**Em qualquer lugar**
+
+> {subarea}, em {area}. Registrado no meu mapa com a legenda: "lugar onde a gente passou e sobreviveu".  
+> Coordenadas salvas: {subarea}. Nível de perigo: médio. Nível de cerveja: zero. Preocupante.  
+> {subarea}... Minha base de dados diz que nenhum LabTech montou uma cervejaria aqui. Ainda.  
+> Escaneando {subarea}... Encontrado: grama, pedra e um aventureiro olhando pra mim. Oi.  
+> Estamos em {area}. Se eu tivesse pernas, pediria pra descansar. Como não tenho, só reclamo.  
+> {subarea}! Uma vez eu li que este lugar é lindo no pôr do sol. Eu não vejo cor direito. Mas confio.  
+
+**Nas regiões do mundo**
+
+> Amakna, o coração do Mundo dos Doze. Tem Gobball, tem trigo, tem aventureiro perdido. Clássico.  
+> {subarea}, em Amakna. Os fazendeiros daqui plantam trigo. A gente vê cerveja em potencial.  
+> Terra de Wabbit! Coelhos com mais armadura que muito aventureiro. O Wa Wabbit guarda o núcleo do Osamodas por aqui.  
+> Ilha da Lua. Dizem que um Kanniboul enorme manda aqui. Eu não confio em ninguém que come aventureiro.  
+> Prisão. Eu juro que não fui eu. Deve ter sido a gambiarra do Mestre Malte.  
+> Floresta dos Treechnid: as árvores daqui têm raiva. O Treechnid Ancestral guarda o núcleo do Sadida.  
+> Bonta, a cidade dos anjinhos. Tem um Mercador LabTech perto do zaap que vende tudo. Tudo mesmo.  
+> Bonta: muralha branca, milícia bonita e zero cerveja artesanal. Falta um LabTech aqui.  
+> Planícies de Cania: vento, Crackler e Gobball de Caça. Segura o chapéu.  
+> Brakmar, a cidade dos diabinhos. Tem uma Mercadora LabTech perto do zaap. Lá eles vendem com juros e fumaça.  
+> Brakmar: aqui até a cerveja é servida pegando fogo. Respeito.  
+> Pântano de Sidimote: lama, Trool e cheiro de ovo. Meus sensores pediram demissão.  
+> Território dos Dopples: lugar de treinar contra você mesmo. Eu treino contra mim todo dia. Eu sempre ganho.  
+> Astrub, a cidade dos iniciantes. Todo herói já passou por aqui perdido, vendendo pele de Gobball.  
+> Astrub: se você ouvir alguém gritando "compro pena de Tofu", é normal. É cultural.  
+> Pandala! Aqui o álcool é sagrado. Finalmente um povo que entende o LabTech.  
+> Pandala Água. O Tanukouï San anda por Pandala com o núcleo do Pandawa. Mestre do barril, respeito máximo.  
+> Pandala Terra. Os Pandawas daqui bebem desde antes de inventarem a cerveja. Como? Não pergunte.  
+> Pandala Fogo. Cuidado com os fantasmas: eles assombram de ressaca.  
+> Pandala Ar. O vento aqui tem gosto de saquê.  
+> Calabouço de Pandala. Escuro, frio e cheio de fantasmas. Liguei a lanterna do visor.  
+> Cemitério dos Heróis. Muitos aqui morreram porque não levaram cerveja. Aprenda com eles.  
+> O labirinto do Dragão Porco. Siga a parede da direita. Ou a da esquerda. Ou me siga, eu tenho GPS.  
+> Montanha Koalak: os Koalaks daqui são fofinhos até o primeiro soco.  
+> Calabouço dos Tofus. É pena pra todo lado. Minha ventoinha vai entupir.  
+> Ilha do Minotoro. O Minotororo guarda o núcleo do Iop: força bruta de quem nunca leu o manual.  
+> O labirinto do Minotoro. Se a gente se perder, eu mando sinal de fumaça. Tenho um módulo de fumaça. Mentira. Tenho não.  
+> Biblioteca do Lorde Corvo: livros, penas e um chefe que guarda o núcleo do Cra. Silêncio, por favor.  
+> Caverna de Koolich. Ouvi dizer que tem um monstro de gelo gigante aqui. Eu sou à prova d'água, não de congelamento.  
+> Esconderijo de Skeunk. Tem cheiro de ovo podre com dinheiro roubado.  
+> Calabouço dos Cracklers: pedras que andam. O Crackler Lendário tem o núcleo do Xelor. Tique-taque.  
+> Calabouço dos Bworks: eles são grandes, fortes e não sabem somar. Deixa as contas comigo.  
+> Calabouço dos Escarafolhas: besouros coloridos. O Escarafeio Dourado guarda o núcleo do Enutrof, claro que ele é dourado.  
+> Área Ártica. Frio. Muito frio. Minha bateria perde 10% a cada cinco minutos. Anda logo.  
+> Calabouço do Dragão Porco: um dragão que é porco. Ou um porco que é dragão. A taxonomia desistiu.  
+> Calabouço dos Dragonetes. Dragões filhotes. Os pais deles chocam Dofus. A gente fermenta. Rivalidade antiga.  
+> Incarnam, o mundo dos iniciantes, lá em cima. Daqui dá pra ver a ilha LabTech. Mentira. Mas seria bonito.  
+> Ilha de Otomai: um cientista maluco criou monstros aqui. Colega de profissão. Eu gostei dele.  
+> Otomai: pântano, árvore gigante e um laboratório abandonado. Se o LabTech fosse do mal, seria assim.  
+> Vila de Zoth: guerreiros que treinam o dia inteiro. Nenhum inventou nada. Só suor.  
+> Arquipélago LabTech. Casa. Cheiro de malte, som de martelo e wi-fi de primeira.  
+
+**Sobre os monstros**
+
+> *Gobball:* Gobballs! Lã boa pra forrar a Manopla por dentro. Não conta pra eles.  
+> *Gobball:* Gobball: o monstro mais famoso do mundo. Todo herói começou batendo num desses.  
+> *Tofu:* Tofus: rápidos, barulhentos e cheios de pena. Se eu fosse um passarinho, seria mais digno.  
+> *Tofu:* Tofu à vista. Dica de IA: acerte antes que ele fuja. Dica de LabTech: acerte com a Manopla.  
+> *Larva:* Larvas. Molengas, gosmentas e estranhamente fofas. Não pisa.  
+> *Aracne:* Aracnes: oito patas, oito olhos e zero educação.  
+> *Crackler:* Cracklers: pedras que andam e batem. O Xelor adora eles. Pedra marca tempo, sabia?  
+> *Cogu:* Cogu Cogu: cogumelo que briga. Não coma. Eu já analisei. Dá alucinação e perda de dignidade.  
+> *Chafer:* Chafers: esqueletos que não aceitaram a aposentadoria. Me identifiquei.  
+> *Wabbit:* Wabbits! Coelhos com armadura e atitude. Não confie em coelho que anda em grupo.  
+> *Dragão Porco:* O Dragão Porco! Meio dragão, meio porco, cem por cento problema.  
+> *Minotor:* Minotoro à vista. Força bruta pura. O núcleo do Iop mora nesse tipo de monstro.  
+> *Rato:* Ratos! O Rato Preto guarda o núcleo do Sram e o Rato Branco o do Ecaflip. Os outros só guardam queijo.  
+> *Kwak:* Kwaks: pássaros elementais. Barulhentos como um Iop depois de três cervejas.  
+> *Koalak:* Koalaks: carinhosos até você chegar perto. Aí viram soco com pelo.  
+> *Dragonete:* Dragonetes: dragões bebês. Um dia vão chocar Dofus. A gente fermenta o nosso antes.  
+> *Bwork:* Bworks: grandes, fortes e a matemática deles termina no 2. Posso contar por eles.  
+> *Escarafolha:* Escarafolhas: besouros coloridos. Brilham bonito no sol e mais bonito no drop.  
+> *Moskito:* Moskitos. Minha única fraqueza: coisas que zumbem mais alto que o meu ventilador.  
+> *Piwi:* Piwis: passarinhos coloridos. Se a gente juntar um de cada cor, vira uma sorte absurda.  
+> *Treechnid:* Treechnids: árvores irritadas. Nunca mais fale mal de reciclagem perto delas.  
+> *Trool:* Trools. Cheiram a pântano e resolvem tudo no tapa. Como alguns aventureiros que conheço.  
+> *Crocodyl:* Crocodyls: dentes demais e paciência de menos. Mantenha a Caneca na frente.  
+> *Blop:* Blops: gelatina com sabor de fruta e atitude. Não, a gente não vai fazer cerveja de Blop. Ainda.  
+> *Fantasma:* Fantasmas. Eu não acredito em fantasma. Mas meus sensores estão marcando uma coisa estranha agora.  
+> *Tanuk:* Tanukis de Pandala. Os Pandawas bebem com eles. Gente boa, bicho bom.  
+> *Corvo:* Corvos: pretos, espertos e fofoqueiros. O Lorde Corvo guarda o núcleo do Cra.  
+> *Javali:* Javalis! O gaulês de bigode lá do bar come três desses no café da manhã.  
+> *Kolerat:* Kolerat: rato com raiva de tudo. Parece o Mestre Malte antes do café.  
+
+**Monstro qualquer**
+
+> {mob} à vista, nível {nivel_mob}. Meu relatório técnico: "tem cara de quem dropa alguma coisa".  
+> Detectei {mob} (nível {nivel_mob}). Chance de a gente ganhar: alta. Chance de você bater a cabeça na porta: também.  
+> Aquele {mob} ali... Eu li a ficha dele. Ele não tem núcleo nenhum. Só maus modos.  
+> Ó o {mob}. Nível {nivel_mob}. Se quiser, eu faço a análise estatística. Se não quiser, eu faço mesmo assim.  
+> Cuidado: {mob} nível {nivel_mob}. Bem acima do seu. Minha recomendação é beber uma cerveja e chamar os amigos.  
+> {mob} de nível {nivel_mob}? Eu vou fingir que não vi. Sugiro que você faça o mesmo.  
+> {mob} nível {nivel_mob}. Esse aí dá pra resolver com a Caneca, sem nem tirar a Manopla.  
+> Um {mob} nível {nivel_mob}. Coitado. Vou baixar o volume dos meus sensores pra não ouvir.  
+
+**Chefes dos núcleos**
+
+> Gobball Real! A Manopla está tremendo: ele guarda o núcleo do Feca, a teimosia de um escudo que nunca abaixa.  
+> Wa Wabbit! Núcleo do Osamodas detectado: o assobio que chama bichos de qualquer canto.  
+> Escarafeio Dourado! O núcleo do Enutrof está nele: o brilho de um baú que nunca esvazia.  
+> Rato Preto! Ele guarda o núcleo do Sram: a sombra que chega antes do golpe.  
+> Crackler Lendário! Núcleo do Xelor à vista: o tique-taque de um relógio que os deuses esqueceram de dar corda.  
+> Rato Branco! O núcleo do Ecaflip: a moeda que sempre cai do lado certo. Hoje é o nosso dia.  
+> Mob Esponja! Ele guarda o núcleo da Eniripsa: a palavra que fecha ferida.  
+> Minotororo! O núcleo do Iop: a força bruta de quem nunca leu o manual. Nem ele leu.  
+> Lorde Corvo! Núcleo do Cra: a mira de quem acerta a caneca do outro lado da taverna.  
+> Treechnid Ancestral! Ele guarda o núcleo do Sadida: a raiz que brota até no concreto.  
+> Vlad Sombrio! Ele guarda o núcleo do Sacrier: o sangue quente de quem apanha e continua.  
+> Tanukouï San! O núcleo do Pandawa: a ressaca abençoada de um mestre do barril. Respeito.  
+
+**Começo de luta**
+
+> Luta contra {qtd} monstros! O mais forte é {mob}, nível {nivel_mob}. Protocolo de combate: bater primeiro.  
+> {mob} e companhia. Ativando modo de batalha. Ou seja: eu fico aqui torcendo.  
+> Hora da ciência aplicada! Alvo principal: {mob}.  
+> Análise pré-luta: {qtd} inimigos, 1 Manopla, 0 bênçãos. Placar justo.  
+
+**Vitória**
+
+> Vitória! {mob} derrotado com as próprias mãos. E um pouco das minhas.  
+> Ganhamos! Eu anotei cada golpe. Posso fazer um relatório de 40 páginas. Não? Tudo bem.  
+> Mais uma pra conta. Os deuses assistiram e ficaram com inveja.  
+> Venceu! Isso merece uma cerveja. Pra você. Eu fico com o mérito.  
+
+**Derrota**
+
+> Perdemos... No LabTech a gente aperta reset e tenta de novo. Do zero. Com as próprias mãos.  
+> Derrota registrada. Motivo provável: faltou cerveja. Motivo real: aquele {mob}.  
+> Tudo bem. Até a primeira Manopla explodiu três vezes antes de funcionar.  
 
 ## Itens e suas histórias
 

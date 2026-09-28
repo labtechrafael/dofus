@@ -94,6 +94,35 @@ def npc_md(n):
     return '\n'.join(L)
 
 
+def drone_md():
+    """As falas do Drone de IA (DRONE em content.py), por situação."""
+    D = C.DRONE
+    mapas = {m['id']: m['name'].replace('_', ' ') for m in C.MAPS}
+    L = ['## O Drone de IA fala', '',
+         'Equipado como familiar, o Drone de IA fala sozinho, como um item vivo: um balão em cima do personagem e a '
+         'frase no chat. Ele olha onde você está, os monstros do mapa, a luta e o seu nível. No chat, `.drone` faz ele '
+         'falar na hora, `.drone mudo` cala e `.drone volta` libera. Os trechos entre chaves viram o nome, o nível, o '
+         'lugar ou o monstro do momento.', '']
+    def bloco(titulo, frases):
+        return [f'**{titulo}**', ''] + [f'> {f}' + '  ' for f in frases] + ['']
+    L += bloco('Ao entrar no jogo', D['login']) + bloco('Ao subir de nível', D['nivel'])
+    L += bloco('Histórias do LabTech', D['geral'])
+    for k, fr in D['mapa'].items():
+        L += bloco('Na ilha: ' + ('Campos de Teste' if k == 'campo' else mapas.get(k, str(k))), fr)
+    L += bloco('Em qualquer lugar', D['local'])
+    L += ['**Nas regiões do mundo**', '']
+    for k, fr in D['area'].items():
+        L += [f'> {f}' + '  ' for f in fr]
+    L += ['', '**Sobre os monstros**', '']
+    for k, fr in D['mob'].items():
+        L += [f'> *{k}:* {f}' + '  ' for f in fr]
+    L += ['']
+    L += bloco('Monstro qualquer', D['mob_generico'] + D['mob_forte'] + D['mob_fraco'])
+    L += bloco('Chefes dos núcleos', list(D['nucleo'].values()))
+    L += bloco('Começo de luta', D['luta_inicio']) + bloco('Vitória', D['luta_vitoria']) + bloco('Derrota', D['luta_derrota'])
+    return L
+
+
 def main():
     L = ['# Histórias da Ilha LabTech', '',
          'Todas as falas de todos os personagens, gerado automaticamente a partir de',
@@ -103,7 +132,8 @@ def main():
          '## Sumário', '',
          '- [A classe LabTech](#a-classe-labtech)', '- [Os 12 núcleos](#os-12-núcleos)',
          '- [Personagens da ilha](#personagens-da-ilha)', '- [Bar das Celebridades](#bar-das-celebridades)',
-         '- [Mercadores LabTech](#mercadores-labtech)', '- [Itens e suas histórias](#itens-e-suas-histórias)', '']
+         '- [Mercadores LabTech](#mercadores-labtech)', '- [O Drone de IA fala](#o-drone-de-ia-fala)',
+         '- [Itens e suas histórias](#itens-e-suas-histórias)', '']
     lang = C.CLASS13['lang']
     L += ['## A classe LabTech', '', f"*{lang['sd']}*", '', lang['d'], '',
           f"**{lang['pt']}**: {lang['pd']}", '']
@@ -131,6 +161,7 @@ def main():
     for n in C.NPCS:
         if n['id'] in loja_ids:
             L += [npc_md(n), '']
+    L += drone_md()
     L += ['## Itens e suas histórias', '', '| Item | Descrição |', '|---|---|']
     for it in C.ITEMS:
         if it.get('desc'):

@@ -97,6 +97,8 @@ Treechnid Ancestral, Perfidious Tynril, Deminobola, Muminotor e Tanukouï San.
 
 O **Estagiário** é a IA do LabTech num drone cúbico com carinha na tela. Ele fica em quase todos os mapas e leva você na hora para qualquer lugar da ilha. Existe também a versão de bolso, o **Drone de IA**: um familiar que flutua ao seu lado e dá +1 PA, +1 PM, +5000 de prospecção e +10 invocações. A Lúpula vende o drone na Praça, e ele se alimenta das cervejas LabTech, cada uma treinando um atributo.
 
+E ele **fala**: comenta onde você está, os monstros do mapa, as lutas e o seu nível, e conta histórias do LabTech. Use `.drone` para ele falar na hora e `.drone mudo` / `.drone volta` para calar ou liberar.
+
 ## Personagens da ilha
 
 > Todas as conversas completas, de todos os personagens, estão em **[HISTORIAS.md](HISTORIAS.md)**.

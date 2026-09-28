@@ -741,6 +741,39 @@ def build_config():
     return txt
 
 
+def build_drone():
+    """Falas do Drone de IA (DRONE em content.py) e os nomes em português de monstros, subáreas e regiões num TSV
+    que o servidor lê (DroneTalk.java). O servidor relê o arquivo quando ele muda: dá para trocar falas sem reiniciar."""
+    D = C.DRONE
+    maps_lang = json.load(open(os.path.join(PANEL_DATA, 'lang', 'maps.json'), encoding='utf-8'))['MA']
+    mobs_lang = json.load(open(os.path.join(PANEL_DATA, 'lang', 'monsters.json'), encoding='utf-8'))['M']
+    campos = [m['id'] for m in C.MAPS if m['name'].startswith('Campo_de_Teste')]
+    rows = [('config', 'intervalo', '%d-%d' % D['intervalo'])]
+    for grupo in ('login', 'nivel', 'geral', 'local', 'mob_generico', 'mob_forte', 'mob_fraco',
+                  'luta_inicio', 'luta_vitoria', 'luta_derrota'):
+        rows += [(grupo, '', f) for f in D[grupo]]
+    for chave, frases in D['mapa'].items():
+        for mid in (campos if chave == 'campo' else [chave]):
+            rows += [('mapa', str(mid), f) for f in frases]
+    for grupo in ('area', 'mob'):
+        for chave, frases in D[grupo].items():
+            rows += [(grupo, str(chave), f) for f in frases]
+    rows += [('nucleo', str(k), f) for k, f in D['nucleo'].items()]
+    rows += [('nome_mob', k, v['n']) for k, v in mobs_lang.items() if isinstance(v, dict) and v.get('n')]
+    rows += [('nome_sa', k, v['n']) for k, v in maps_lang['sa'].items() if v.get('n') not in (None, 'null')]
+    rows += [('nome_area', k, v['n']) for k, v in maps_lang['a'].items() if v.get('n') not in (None, 'null')]
+    rows += [('nome_sa', str(k), n) for k, n in C.SUBAREAS.items()] + [('nome_area', str(C.AREA['id']), C.AREA['name'])]
+    for g, k, f in rows:
+        bad = [c for c in '|<\t\n' if c in f]
+        assert not bad, f'fala do drone com caractere proibido {bad}: {f}'
+    out = os.path.join(ROOT, 'server', 'game', 'scripts', 'labtech')
+    os.makedirs(out, exist_ok=True)
+    with open(os.path.join(out, 'drone_falas.tsv'), 'w', encoding='utf-8', newline='\n') as f:
+        f.write('# Gerado por panel/tools/labtech/build.py a partir de content.py (DRONE). grupo, chave, texto.\n')
+        f.writelines(f'{g}\t{k}\t{t}\n' for g, k, t in rows)
+    log(f'  drone falante: {sum(1 for r in rows if not r[0].startswith("nome_"))} falas')
+
+
 def main():
     args = set(sys.argv[1:])
     log('Construindo o Mundo LabTech...')
@@ -750,6 +783,7 @@ def main():
     build_npcs(specs, dialog_ids)
     build_craft_skills()
     build_shops()
+    build_drone()
     build_icons()
     if '--sem-lang' not in args:
         build_lang(specs, dialog_ids)
