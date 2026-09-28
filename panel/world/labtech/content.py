@@ -116,7 +116,7 @@ for bid, icon, name, (stat, val), extra, desc in BEERS:
                   'recipe': [(30017, 3), (30015, 1), (30016, 1)] + ([(extra, 1)] if extra else [])})
 ITEMS += [
     {'id': 30024, 'type': 18, 'level': 1, 'g': 3004, 'icon': 'drone', 'name': 'Drone de IA', 'price': 5000, 'weight': 5,
-     'stats': '6f#1#0#0#0d0+1,80#1#0#0#0d0+1,b0#1388#0#0#0d0+5000',   # +1 PA, +1 PM, +5000 prospeccao
+     'stats': '6f#1#0#0#0d0+1,80#1#0#0#0d0+1,b0#1388#0#0#0d0+5000,b6#a#0#0#0d0+10',   # +1 PA, +1 PM, +5000 prospeccao, +10 invocacoes
      'desc': 'O Estagiário de bolso. Analisa, escaneia, projeta hologramas e, pelo visto, bebe cerveja: cada cerveja LabTech treina um atributo dele.'},
     {'id': 30025, 'type': 90, 'level': 1, 'g': 3004, 'icon': 'drone', 'name': 'Drone de IA Desligado', 'price': 1, 'weight': 5,
      'desc': 'Ficou sem cerveja e sem carinho. Leve a um LabTech para religar.'},
@@ -544,7 +544,7 @@ for _n in LOJA_NPCS:
     NPCS.append({'id': _n['id'], 'name': _n['name'], 'gfx': _n['gfx'], 'gender': _n.get('gender', 0), 'colors': _n['colors'],
                  'maps': {}, 'vendor': True})
     _d = {'inicio': ('Tudo o que existe no Mundo dos Doze, numa loja só. Os deuses cobram devoção; eu só cobro kamas. '
-                     'E aqui qualquer item serve em qualquer nível: o LabTech tirou a trava. O que vai ser?',
+                     'Vendo de tudo, mas cada item pede o nível dele: isso nem o LabTech destravou. O que vai ser?',
                      [(_label, _key) for _key, _label, _ in LOJA_MENUS] + [('Só olhando, obrigado.', 'fim')])}
     for _key, _label, _cats in LOJA_MENUS:
         if _cats == 'resto':

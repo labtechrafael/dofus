@@ -17,10 +17,11 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
 
 ## O que vem no pacote
 
-> Guias completos: **[A Ilha LabTech](docs/ILHA_LABTECH.md)** (mapas, missão, cervejas, NPCs, bar das celebridades, segredos) e **[A classe LabTech](docs/CLASSE_LABTECH.md)** (história, visual, feitiços, kit e todos os itens com atributos).
+> Guias completos: **[A história e todas as falas](docs/HISTORIAS.md)**, **[A Ilha LabTech](docs/ILHA_LABTECH.md)** (mapas, missão, cervejas, NPCs, bar das celebridades, segredos) e **[A classe LabTech](docs/CLASSE_LABTECH.md)** (história, visual, feitiços, kit e todos os itens com atributos).
 
-- **Classe LabTech** (masculino e feminino). Nasce de jaleco e visor, com a Manopla e a caneca de cerveja, e sabe
-  os feitiços das 12 classes. No jogo, `.raca iop` (ou outra classe) monta a barra de feitiços daquela raça.
+- **Classe LabTech** (masculino e feminino). Nasce de jaleco e visor, com a Manopla e a caneca de cerveja, e aprende
+  os feitiços das 12 classes conforme sobe de nível. O livro de feitiços mostra o nível de cada um, e `.raca iop`
+  (ou outra classe) monta a barra de feitiços daquela raça.
 - **Arquipélago LabTech**: laboratório, praça, cervejaria, oficina, estufa, museu, arena, forja do Dofus
   Fermentado e o **Bar das Celebridades**: 20 famosos em versão paródia, cada um com personagem e retrato próprios
   e uma história escrachada de onde veio.
@@ -30,7 +31,7 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
 - **Regras do servidor local**:
   - XP x10, drop x3, kamas x5 e profissões x10;
   - nível máximo 300;
-  - qualquer item em qualquer nível;
+  - itens e conjuntos pedem o nível normal do jogo;
   - inventário sem limite de peso;
   - molho de chaves que não acaba;
   - todos os zaaps liberados.
@@ -53,6 +54,8 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
 | **Tela de criação**, no mesmo traço das outras classes | **A ilha LabTech** no mapa-mundi |
 
 ![A manopla no braço, correndo](docs/imagens/corrida.png)
+
+![Drone de IA](docs/imagens/drone.png)
 
 <sub>Imagens do jogo rodando localmente com este projeto. Dofus e toda a sua arte são da Ankama Games.</sub>
 

@@ -514,13 +514,14 @@ const GUIDE = {
     <h3>Como ganhar os poderes das 12 classes (sem trapaça)</h3><ol>
       <li>Fale com o <b>Mestre Malte</b> no Laboratório → "É perigoso ir sozinho?" → ganhe a <b>Manopla Mk I</b>.</li>
       <li>Derrote os 12 chefes e pegue os <b>12 núcleos</b>: Gobball Real, Wa Wabbit, Escarafeio Dourado, Rato Preto, Crackler Lendário, Rato Branco, Mob Esponja, Minotororo, Lorde Corvo, Treechnid Ancestral, Vlad Sombrio, Tanukouï San.</li>
-      <li>Volte ao Mestre Malte → encaixe os núcleos → <b>Manopla Mk XII</b> + todos os feitiços das 12 classes no grau 6.</li>
-      <li>Leve 10 Malte, 10 Lúpulo e 10 Levedura → ele forja o <b>Dofus Fermentado</b> (+1 PA, +1 PM, +1000 em tudo).</li></ol>
+      <li>Volte ao Mestre Malte → encaixe os núcleos → <b>Manopla Mk XII</b> (+1 PA, alcance 2).</li>
+      <li>Leve 10 Malte, 10 Lúpulo e 10 Levedura → ele forja o <b>Dofus Fermentado</b> (+1 PA, +1 PM, +100 em cada atributo, 50% de resistência a tudo, +1000 em críticos).</li></ol>
+    <p>Os <b>feitiços das 12 classes</b> chegam pelo nível, nos mesmos níveis de cada classe (graus 1 a 5 no nível em que liberam, grau 6 cem níveis depois). No livro de feitiços o nome mostra o nível: <i>Escudo Feca (nv. 80)</i>.</p>
     <p class="note">Código secreto: no Laboratório, digite no chat <code>.cima cima baixo baixo esquerda direita esquerda direita b a</code>. Cervejas: alambique da Oficina (Alquimista) ou Taverneiro Barril.</p>
     <h3>Atalhos (GM)</h3>
     <div class="row">${playerSelect('ltPlayer')}<button class="btn primary" id="ltTp">Teleportar para o Laboratório</button>
       <button class="btn" id="ltKit">Dar kit LabTech completo</button></div>
-    <p class="note">Kit = Manopla Mk XII, Dofus Fermentado, Drone de IA, Conjunto Jaleco (6 peças), 10 de cada cerveja e os feitiços das 12 classes.</p>
+    <p class="note">Kit = Manopla Mk XII, Dofus Fermentado, Drone de IA, Conjunto Jaleco (6 peças) e 10 de cada cerveja. Os feitiços vêm pelo nível.</p>
     <h3>Mapas</h3>
     <table><tr><th>Mapa</th><th>Coordenadas</th><th>NPCs</th><th></th></tr>
     ${w.maps.map((m) => `<tr><td><b>${esc(m.name)}</b> <span class="note">#${m.id}</span></td><td>${m.x},${m.y}</td><td class="note">${m.npcs.map(esc).join(', ')}</td>

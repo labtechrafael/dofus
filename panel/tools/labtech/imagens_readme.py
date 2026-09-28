@@ -225,6 +225,38 @@ def img_retratos():
     tela.convert('RGB').save(os.path.join(OUT, 'retratos.png'), optimize=True)
 
 
+def img_drone():
+    """Drone de IA em destaque: a arte, o Estagiario (NPC-drone da ilha) e o LabTech com o familiar ao lado."""
+    arte = Image.open(os.path.join(C.ART_GERADO, 'drone.png')).convert('RGBA')
+    estagiario = render(os.path.join(SPR, f"{C.NPCS[1]['gfx']}.swf"), ('staticR', 'staticS', 'staticF'), zoom=8)
+    labtech = render(os.path.join(SPR, '130.swf'), 'staticR', zoom=8)
+    pet = render(os.path.join(SPR, 'accessories', 'a6.swf'), C.CLASS13['pet_symbol'], zoom=8)
+    tela = fundo(1400, 560).convert('RGBA')
+    titulo(tela, 'Drone de IA: o Estagiário de bolso', 18, 42)
+    d = ImageDraw.Draw(tela)
+    f = fonte(22)
+    k = 280 / max(arte.size)   # pixel art: amplia com pixels nitidos
+    im = arte.resize((int(arte.width * k), int(arte.height * k)), Image.NEAREST)
+    cole(tela, sombra(im), 250, 470)
+    if estagiario:
+        im = estagiario[0]
+        im.thumbnail((260, 330), Image.LANCZOS)
+        cole(tela, sombra(im), 700, 470)
+    if labtech:
+        lt = labtech[0]
+        k = 380 / lt.height
+        lt = lt.resize((int(lt.width * k), 380), Image.LANCZOS)
+        cole(tela, sombra(lt), 1110, 480)
+        if pet:
+            p = pet[0]
+            p = p.resize((int(p.width * k), int(p.height * k)), Image.LANCZOS)
+            cole(tela, sombra(p), 1110 - lt.width * 0.5 - p.width * 0.75, 480 - 60)
+    for x, txt in ((250, 'A arte do drone'), (700, 'O Estagiário (NPC da ilha)'), (1110, 'O familiar ao lado do LabTech')):
+        w = d.textlength(txt, font=f)
+        d.text((x - w / 2, 505), txt, font=f, fill=(74, 46, 20))
+    tela.convert('RGB').save(os.path.join(OUT, 'drone.png'), optimize=True)
+
+
 def img_mapa():
     p = os.path.join(C.ART_GERADO, 'mundi_tile.png')
     if os.path.exists(p):

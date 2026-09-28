@@ -47,8 +47,8 @@ para qualquer lugar da ilha, inclusive para os quatro Campos de Teste.
    | Xelor | Crackler Lendário | | Sadida | Treechnid Ancestral |
    | Sacrier | Vlad Sombrio | | Pandawa | Tanukouï San |
 
-3. Com os 12 núcleos, volte ao Mestre Malte: ele encaixa tudo e entrega a **Manopla Gambiarra Mk XII**. Seu personagem
-   passa a ter **todos os feitiços das 12 classes no nível 6**.
+3. Com os 12 núcleos, volte ao Mestre Malte: ele encaixa tudo e entrega a **Manopla Gambiarra Mk XII**
+   (+1 PA e alcance até 2).
 4. Quer mais? Leve **10 Malte de Primeira, 10 Lúpulo Cítrico e 10 Levedura Selvagem** ao Mestre Malte e ele forja o
    **Dofus Fermentado**. Os dragões chocam os Dofus deles; os LabTechs fermentam o seu.
 
@@ -91,7 +91,15 @@ Treechnid Ancestral, Perfidious Tynril, Deminobola, Muminotor e Tanukouï San.
 
 ---
 
+## O Estagiário e o Drone de IA
+
+![Drone de IA: o Estagiário de bolso](imagens/drone.png)
+
+O **Estagiário** é a IA do LabTech num drone cúbico com carinha na tela. Ele fica em quase todos os mapas e leva você na hora para qualquer lugar da ilha. Existe também a versão de bolso, o **Drone de IA**: um familiar que flutua ao seu lado e dá +1 PA, +1 PM, +5000 de prospecção e +10 invocações. A Lúpula vende o drone na Praça, e ele se alimenta das cervejas LabTech, cada uma treinando um atributo.
+
 ## Personagens da ilha
+
+> Todas as conversas completas, de todos os personagens, estão em **[HISTORIAS.md](HISTORIAS.md)**.
 
 | NPC | Onde | O que faz |
 |---|---|---|
@@ -151,7 +159,7 @@ Converse com todos: cada um tem a sua história e pelo menos uma pergunta extra.
 
 Ao lado do **zaap de Bonta** e do **zaap de Brâkmar** fica um Mercador LabTech que vende **todos os itens do jogo**
 (mais de 10 mil), separados por prateleira. Escolha a seção no diálogo (Equipamentos, Armas, Poções, Recursos…) e a
-janela de compra abre na hora.
+janela de compra abre na hora. Dá para comprar qualquer item, mas para equipar vale o nível normal de cada um.
 
 ---
 

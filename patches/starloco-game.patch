@@ -59,7 +59,7 @@ index ddacb51..20217e8 100644
  
  JobLevelExp = { 0, 50, 140, 271, 441, 653, 905, 1199, 1543, 1911, 2330, 2792, 3297, 3840, 4439, 5078, 5762, 6493, 7280, 8097, 8980, 9898, 10875, 11903, 12985, 14122, 15315, 16564, 17873, 19242, 20672, 22166, 23726, 25353, 27048, 28815, 30656, 32572, 34566, 36641, 38800, 41044, 43378, 45804, 48325, 50946, 53669, 56498, 59437, 62491, 65664, 68960, 72385, 75943, 79640, 83482, 87475, 91624, 95937, 100421, 105082, 109930, 114971, 120215, 125671, 131348, 137256, 143407, 149811, 156481, 163429, 170669, 178214, 186080, 194283, 202839, 211765, 221082, 230808, 240964, 251574, 262660, 274248, 286364, 299037, 312297, 326175, 340705, 355924, 371870, 388582, 406106, 424486, 443772, 464016, 485274, 507604, 531071, 555541, 581687}
 diff --git a/src/org/starloco/locos/client/Player.java b/src/org/starloco/locos/client/Player.java
-index 6ba6d0f..f17e75b 100644
+index 6ba6d0f..caac550 100644
 --- a/src/org/starloco/locos/client/Player.java
 +++ b/src/org/starloco/locos/client/Player.java
 @@ -509,7 +509,7 @@ public class Player implements Scripted<SPlayer>, Actor {
@@ -81,7 +81,7 @@ index 6ba6d0f..f17e75b 100644
                  World.world.getExperiences().players.minXpAt(Config.startLevel), 100, Integer.parseInt(classe
                  + "" + sexe), (byte) 0, compte.getId(), new HashMap<>(), (byte) 1, (byte) 0, (byte) 0, "*#%!pi$:?",
                  (short)startMapID,
-@@ -533,6 +534,27 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -533,6 +534,23 @@ public class Player implements Scripted<SPlayer>, Actor {
  
          if (!DatabaseManager.get(PlayerData.class).insert(player))
              return null;
@@ -99,20 +99,40 @@ index 6ba6d0f..f17e75b 100644
 +                if (player.addItem(object, false, false))
 +                    World.world.addGameObject(object);
 +            }
-+            // LabTech tem todos os poderes: todos os feiticos das 12 classes, no nivel maximo
-+            int[] allSpells = {3, 6, 17, 4, 2, 1, 9, 18, 20, 14, 19, 5, 16, 8, 12, 11, 10, 7, 15, 13, 1901, 422, 34, 21, 23, 26, 22, 35, 28, 37, 30, 27, 24, 33, 25, 38, 36, 32, 29, 39, 40, 31, 1902, 420, 51, 43, 41, 49, 42, 47, 48, 45, 53, 46, 52, 44, 50, 54, 55, 56, 58, 59, 57, 60, 1903, 425, 61, 72, 65, 66, 68, 63, 74, 64, 79, 78, 71, 62, 69, 77, 73, 67, 70, 75, 76, 80, 1904, 416, 82, 81, 83, 84, 100, 92, 88, 93, 85, 96, 98, 86, 89, 90, 87, 94, 99, 95, 91, 97, 1905, 424, 102, 103, 105, 109, 113, 111, 104, 119, 101, 107, 116, 106, 117, 108, 115, 118, 110, 112, 114, 120, 1906, 412, 125, 128, 121, 124, 122, 126, 127, 123, 130, 131, 132, 133, 134, 135, 129, 136, 137, 138, 139, 140, 1907, 427, 143, 141, 142, 144, 145, 146, 147, 148, 154, 150, 151, 155, 152, 153, 149, 156, 157, 158, 160, 159, 1908, 410, 161, 169, 164, 163, 165, 172, 167, 168, 162, 170, 171, 166, 173, 174, 176, 175, 178, 177, 179, 180, 1909, 418, 183, 200, 193, 198, 195, 182, 192, 197, 189, 181, 199, 191, 186, 196, 190, 194, 185, 184, 188, 187, 1910, 426, 432, 431, 434, 444, 449, 436, 437, 439, 433, 443, 440, 442, 441, 445, 438, 446, 447, 448, 435, 450, 1911, 421, 686, 692, 687, 689, 690, 691, 688, 693, 694, 695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 1912, 423};
-+            for (int spell : allSpells)
-+                if (World.world.getSort(spell) != null)
-+                    player.learnSpell(spell, 6, false, false, false);
++            // os feiticos das 12 classes chegam pelo nivel (Constant.onLevelUpSpells -> ClassSpellBar.sync)
 +            DatabaseManager.get(PlayerData.class).update(player);
 +        }
  
          SocketManager.GAME_SEND_WELCOME(player);
          World.world.sendMessageToAll("client.player.onjoingame.welcome", player.getName());
-@@ -1477,6 +1499,17 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -1477,6 +1495,41 @@ public class Player implements Scripted<SPlayer>, Actor {
          }
      }
  
++    /** Mundo LabTech: esquece um feitico sem mandar pacote nem salvar (quem chama envia a lista no fim). */
++    public void forgetSpellQuiet(int spellID) {
++        _sorts.remove(spellID);
++        _sortsPlaces.remove(spellID);
++    }
++
++    /** Mundo LabTech: itens equipados acima do nivel do personagem voltam para a bolsa. @return quantos. */
++    public int unequipAboveLevel() {
++        if (Config.itemsAnyLevel) return 0;
++        int n = 0;
++        for (GameObject object : new ArrayList<>(getItems().values())) {
++            if (object == null) continue;
++            int pos = object.getPosition();
++            if (pos < Constant.ITEM_POS_AMULETTE || pos > Constant.ITEM_POS_BOUCLIER) continue;
++            int pano = object.getTemplate().getPanoId();
++            if ((pano >= 81 && pano <= 92) || (pano >= 201 && pano <= 212)) continue; // itens de classe
++            if (object.getTemplate().getLevel() <= this.getLevel()) continue;
++            object.setPosition(Constant.ITEM_POS_NO_EQUIPED);
++            DatabaseManager.get(ObjectData.class).update(object);
++            n++;
++        }
++        return n;
++    }
++
 +    /** Mundo LabTech: troca a barra de atalhos para os feiticos dados (os conhecidos), nas posicoes 1..24. */
 +    public int setSpellBar(int[] spells) {
 +        this._sortsPlaces.clear();
@@ -127,7 +147,32 @@ index 6ba6d0f..f17e75b 100644
      public boolean unlearnSpell(int spell) {
          if (World.world.getSort(spell) == null) {
              GameServer.a();
-@@ -2337,6 +2370,7 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -1818,6 +1871,13 @@ public class Player implements Scripted<SPlayer>, Actor {
+         if (this._mount != null)
+             SocketManager.GAME_SEND_Re_PACKET(this, "+", this._mount);
+ 
++        // Mundo LabTech: o LabTech tem os feiticos do seu nivel e itens acima do nivel voltam para a bolsa
++        int tirados = unequipAboveLevel();
++        List<String> novos = this.classe == Constant.CLASS_LABTECH && !_morphMode
++                ? org.starloco.locos.panel.ClassSpellBar.sync(this) : null;
++        if (tirados > 0 || novos != null)
++            DatabaseManager.get(PlayerData.class).update(this);
++
+         SocketManager.GAME_SEND_Rx_PACKET(this);
+         SocketManager.GAME_SEND_ASK(client, this);
+ 
+@@ -1883,6 +1943,10 @@ public class Player implements Scripted<SPlayer>, Actor {
+         //Actualisation dans la DB
+         DatabaseManager.get(AccountData.class).updateLastConnection(getAccount());
+         SocketManager.GAME_SEND_MESSAGE(this, Config.startMessage.isEmpty() ? this.getLang().trans("client.player.onjoingame.startmessage") : Config.startMessage);
++        if (tirados > 0)
++            sendMessage(tirados + (tirados == 1 ? " item acima do seu n\u00edvel voltou" : " itens acima do seu n\u00edvel voltaram") + " para a bolsa.");
++        if (novos != null && !novos.isEmpty())
++            sendMessage("Manopla recalibrada: " + novos.size() + (novos.size() == 1 ? " feiti\u00e7o novo liberado" : " feiti\u00e7os novos liberados") + " para o seu n\u00edvel.");
+         for (GameObject object : this.objects.values()) {
+             if (object.getTemplate().getType() == Constant.ITEM_TYPE_FAMILIER) {
+                 PetEntry p = World.world.getPetsEntry(object.getGuid());
+@@ -2337,6 +2401,7 @@ public class Player implements Scripted<SPlayer>, Actor {
      }
  
      public int getMaxPod() {
@@ -149,10 +194,10 @@ index e7289cd..dd3d954 100644
                  return "Unk";
          }
 diff --git a/src/org/starloco/locos/command/CommandPlayer.java b/src/org/starloco/locos/command/CommandPlayer.java
-index 4fd74d5..3670c0c 100644
+index 4fd74d5..20027a2 100644
 --- a/src/org/starloco/locos/command/CommandPlayer.java
 +++ b/src/org/starloco/locos/command/CommandPlayer.java
-@@ -47,6 +47,24 @@ public class CommandPlayer {
+@@ -47,6 +47,28 @@ public class CommandPlayer {
                  return commandInterval(player, msg);
              } else if(command(msg, "start") || command(msg, "astrub")) {
                  return commandAstrub(player, msg);
@@ -164,7 +209,11 @@ index 4fd74d5..3670c0c 100644
 +                    player.sendMessage("Use .raca seguido da classe: " + String.join(", ", org.starloco.locos.panel.ClassSpellBar.NAMES));
 +                } else {
 +                    int n = org.starloco.locos.panel.ClassSpellBar.apply(player, idx);
-+                    player.sendMessage("Barra de feiticos: " + org.starloco.locos.panel.ClassSpellBar.NAMES[idx] + " (" + n + " feiticos).");
++                    String nome = org.starloco.locos.panel.ClassSpellBar.NAMES[idx];
++                    player.sendMessage("Barra de feiti\u00e7os: " + Character.toUpperCase(nome.charAt(0)) + nome.substring(1) + " (" + n + " feiti\u00e7os).");
++                    java.util.List<String> falta = org.starloco.locos.panel.ClassSpellBar.bloqueados(player, idx);
++                    if (player.getClasse() == org.starloco.locos.kernel.Constant.CLASS_LABTECH && !falta.isEmpty())
++                        player.sendMessage("Ainda bloqueados (liberam ao subir de n\u00edvel): " + String.join(", ", falta) + ".");
 +                }
 +                return true;
 +            } else if (isLabTechSecretCode(msg)) {
@@ -177,7 +226,7 @@ index 4fd74d5..3670c0c 100644
              } else if(command(msg, "walkfast")) {
                  player.walkFast = !player.walkFast;
                  return true;
-@@ -499,6 +517,16 @@ public class CommandPlayer {
+@@ -499,6 +521,16 @@ public class CommandPlayer {
          return true;
      }
  
@@ -293,7 +342,7 @@ index a9c8de6..195dda8 100644
          return temple;
      }
 diff --git a/src/org/starloco/locos/kernel/Config.java b/src/org/starloco/locos/kernel/Config.java
-index 7d18e1f..fa151c6 100644
+index 7d18e1f..39b317b 100644
 --- a/src/org/starloco/locos/kernel/Config.java
 +++ b/src/org/starloco/locos/kernel/Config.java
 @@ -12,6 +12,10 @@ public class Config {
@@ -301,7 +350,7 @@ index 7d18e1f..fa151c6 100644
              encryption, debug, logs, subscription, autoReboot, resetLimit, maxPets,
              allZaap, allEmotes, allowMulePvp, modeChristmas, modeHalloween, modeHeroic, modeEvent;
 +    /** Servidor LabTech: qualquer item pode ser equipado/usado em qualquer nivel, sem requisitos. */
-+    public static boolean itemsAnyLevel = true;
++    public static boolean itemsAnyLevel = false;
 +    /** Servidor LabTech: peso maximo gigante, o inventario nunca fica cheio. */
 +    public static boolean infinitePods = true;
  
@@ -311,13 +360,13 @@ index 7d18e1f..fa151c6 100644
              Config.maxPets = Boolean.parseBoolean(properties.getProperty(Params.MAX_PETS.toString())); i++;
              Config.allZaap = Boolean.parseBoolean(properties.getProperty(Params.ALL_ZAAP.toString())); i++;
              Config.allEmotes = Boolean.parseBoolean(properties.getProperty(Params.ALL_EMOTES.toString())); i++;
-+            Config.itemsAnyLevel = Boolean.parseBoolean(properties.getProperty("system.server.game.itemsAnyLevel", "true"));
++            Config.itemsAnyLevel = Boolean.parseBoolean(properties.getProperty("system.server.game.itemsAnyLevel", "false"));
 +            Config.infinitePods = Boolean.parseBoolean(properties.getProperty("system.server.game.infinitePods", "true"));
              Config.allowMulePvp = Boolean.parseBoolean(properties.getProperty(Params.ALLOW_MULE_PVP.toString())); i++;
              Constant.TIME_BY_TURN = Integer.parseInt(properties.getProperty(Params.TIME_BY_TURN.toString())) * 1000; i++;
              Config.modeChristmas = Boolean.parseBoolean(properties.getProperty(Params.MODE_CHRISTMAS.toString())); i++;
 diff --git a/src/org/starloco/locos/kernel/Constant.java b/src/org/starloco/locos/kernel/Constant.java
-index b741cb4..63170d6 100644
+index b741cb4..029cc55 100644
 --- a/src/org/starloco/locos/kernel/Constant.java
 +++ b/src/org/starloco/locos/kernel/Constant.java
 @@ -222,6 +222,7 @@ public class Constant {
@@ -443,52 +492,21 @@ index b741cb4..63170d6 100644
                  }
                  break;
          }
-@@ -1689,6 +1749,44 @@ public class Constant {
+@@ -1689,6 +1749,13 @@ public class Constant {
                  if (lvl == 200)
                      perso.learnSpell(1912, 1, true, false, false);//Invocation de Dopeul Pandawa
                  break;
 +
 +            case CLASS_LABTECH:
-+                // LabTech herda um spell de cada classe via Manopla Gambiarra
-+                if (lvl == 3)
-+                    perso.learnSpell(6, 1, true, false, false);//Armure Terrestre (Feca)
-+                if (lvl == 6)
-+                    perso.learnSpell(21, 1, true, false, false);//Griffe Spectrale (Osamodas)
-+                if (lvl == 9)
-+                    perso.learnSpell(51, 1, true, false, false);//Lancer de Piece (Enutrof)
-+                if (lvl == 13)
-+                    perso.learnSpell(72, 1, true, false, false);//Invisibilite (Sram)
-+                if (lvl == 17)
-+                    perso.learnSpell(82, 1, true, false, false);//Contre (Xelor)
-+                if (lvl == 21)
-+                    perso.learnSpell(102, 1, true, false, false);//Pile ou Face (Ecaflip)
-+                if (lvl == 26)
-+                    perso.learnSpell(121, 1, true, false, false);//Mot Curatif (Eniripsa)
-+                if (lvl == 31)
-+                    perso.learnSpell(142, 1, true, false, false);//Bond (Iop)
-+                if (lvl == 36)
-+                    perso.learnSpell(169, 1, true, false, false);//Fleche de Recul (Cra)
-+                if (lvl == 42)
-+                    perso.learnSpell(183, 1, true, false, false);//Ronce (Sadida)
-+                if (lvl == 48)
-+                    perso.learnSpell(434, 1, true, false, false);//Attirance (Sacrieur)
-+                if (lvl == 54)
-+                    perso.learnSpell(693, 1, true, false, false);//Karcham (Pandawa)
-+                if (lvl == 60)
-+                    perso.learnSpell(17, 1, true, false, false);//Glyphe Agressif (Feca)
-+                if (lvl == 70)
-+                    perso.learnSpell(161, 1, true, false, false);//Fleche Magique (Cra)
-+                if (lvl == 80)
-+                    perso.learnSpell(143, 1, true, false, false);//Intimidation (Iop)
-+                if (lvl == 90)
-+                    perso.learnSpell(200, 1, true, false, false);//Poison Paralysant (Sadida)
-+                if (lvl == 100)
-+                    perso.learnSpell(692, 1, true, false, false);//Gueule de bois (Pandawa)
++                // LabTech: aprende os feiticos das 12 classes nos mesmos niveis das classes originais
++                java.util.List<String> novos = org.starloco.locos.panel.ClassSpellBar.sync(perso);
++                if (!novos.isEmpty() && perso.isOnline())
++                    perso.sendMessage("Novos feiti\u00e7os liberados: " + String.join(", ", novos) + ".");
 +                break;
          }
      }
  
-@@ -3665,6 +3763,8 @@ public class Constant {
+@@ -3665,6 +3732,8 @@ public class Constant {
                  return 421;
              case Constant.CLASS_PANDAWA:
                  return 423;
@@ -497,7 +515,7 @@ index b741cb4..63170d6 100644
          }
          return 0;
      }
-@@ -3840,6 +3940,14 @@ public class Constant {
+@@ -3840,6 +3909,14 @@ public class Constant {
                          return 95;
                  }
                  break;
@@ -512,7 +530,7 @@ index b741cb4..63170d6 100644
              default:
                  return 90;
          }
-@@ -3868,6 +3976,8 @@ public class Constant {
+@@ -3868,6 +3945,8 @@ public class Constant {
                  return "Ecaflip";
              case CLASS_PANDAWA:
                  return "Pandawa";
@@ -608,22 +626,28 @@ index deaf73c..879c77c 100644
                          if (!player.hasItemTemplate(item, 1, false) && !player.hasItemTemplate(item2, 1, false))
 diff --git a/src/org/starloco/locos/panel/ClassSpellBar.java b/src/org/starloco/locos/panel/ClassSpellBar.java
 new file mode 100644
-index 0000000..a43918c
+index 0000000..4b18e01
 --- /dev/null
 +++ b/src/org/starloco/locos/panel/ClassSpellBar.java
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,128 @@
 +package org.starloco.locos.panel;
 +
 +import org.starloco.locos.client.Player;
 +import org.starloco.locos.common.SocketManager;
 +import org.starloco.locos.database.DatabaseManager;
 +import org.starloco.locos.database.data.login.PlayerData;
++import org.starloco.locos.fight.spells.Spell;
++import org.starloco.locos.game.world.World;
 +
 +import java.text.Normalizer;
++import java.util.ArrayList;
++import java.util.Comparator;
++import java.util.List;
 +
 +/**
 + * Barra de feiticos por raca (Mundo LabTech): o LabTech conhece os feiticos das 12 classes; este atalho
-+ * troca a barra de atalhos para os feiticos de uma classe. Gerado por panel/tools/labtech (class-spells.json).
++ * troca a barra de atalhos para os feiticos de uma classe. Listas geradas de class-spells.json,
++ * spell-learn-level.json e do lang de feiticos em portugues.
 + */
 +public class ClassSpellBar {
 +
@@ -644,6 +668,38 @@ index 0000000..a43918c
 +        {686, 692, 687, 689, 690, 691, 688, 693, 694, 695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 1912, 423}
 +    };
 +
++    /** Nivel do personagem em que cada feitico e liberado: o mesmo da classe original (especiais no 1). */
++    public static final int[][] LEARN = {
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1},
++        {1, 1, 1, 3, 6, 9, 13, 17, 21, 26, 31, 36, 42, 48, 54, 60, 70, 80, 90, 100, 200, 1}
++    };
++
++    /** Nomes em portugues (lang do cliente), para as mensagens do chat. */
++    public static final String[][] NOMES = {
++        {"Ataque Natural", "Armadura de Terra", "Glifo Agressivo", "Contra-ataque M\u00e1gico", "Cegueira", "Armadura Incandescente", "Ataque Nebuloso", "Armadura de \u00c1gua", "Imunidade", "Armadura de Vento", "Bolha", "Tr\u00e9gua", "Arte do Cajado", "Troco", "Glifo de Cegueira", "Teletransporte", "Glifo Flamejante", "Escudo Feca", "Glifo de Imobiliza\u00e7\u00e3o", "Glifo de Sil\u00eancio", "Invoca\u00e7\u00e3o de Feca Dopple", "Prote\u00e7\u00e3o Melhorada"},
++        {"Invoca\u00e7\u00e3o de Tofu", "Garra Espectral", "Grito do Urso", "Ben\u00e7\u00e3o Animal", "Movimento Felino", "Invoca\u00e7\u00e3o de Gobball", "Sapo", "Invoca\u00e7\u00e3o de Prespic", "Chicote", "Tiro Motivante", "Corvo", "Garra de Chicote", "Cura Animal", "Invoca\u00e7\u00e3o de Javali", "Soco de Crackler", "Resist\u00eancia Natural", "Caninos de Boolobo", "Invoca\u00e7\u00e3o de Bwork Mago", "Invoca\u00e7\u00e3o de Crackler", "Invoca\u00e7\u00e3o de Dragonete Vermelho", "Invoca\u00e7\u00e3o de Osamodas Dopple", "Coleira Espiritual"},
++        {"Arremesso de Moedas", "Arremesso de P\u00e1", "Sacola animada", "P\u00e1 Espectral", "Sorte", "Caixa de Pandora", "Aterro", "Chave Redutiva", "Melhor da vida", "Desinvoca\u00e7\u00e3o", "Ambi\u00e7\u00e3o", "Beijo da P\u00e1", "Distra\u00e7\u00e3o", "Massividade de Massa", "Acelera\u00e7\u00e3o", "P\u00e1 de Julgamento", "P\u00e1 Massacrante", "Corrup\u00e7\u00e3o", "P\u00e1 Animada", "Ba\u00fa Animado", "Invoca\u00e7\u00e3o Enutrof Dopple", "Pux\u00e3o"},
++        {"Desvio", "Invisibilidade", "Armadilha Enganadora", "Ataque Enganador", "Engano", "Golpe Enganador", "Dubl\u00ea", "Localiza\u00e7\u00e3o", "Armadilha de Massa", "Invisibilidade de Outros", "Armadilha Envenenada", "Concentra\u00e7\u00e3o de Chakra", "Armadilha de Imobiliza\u00e7\u00e3o", "Armadilha de Sil\u00eancio", "Armadilha de Desinvoca\u00e7\u00e3o", "Medo", "Trapa\u00e7a", "Impuls\u00e3o de Chakra", "Ataque Letal", "Armadilha Letal", "Invoca\u00e7\u00e3o de Sram Dopple", "Xeque-mate"},
++        {"Contra", "Desacelera\u00e7\u00e3o", "Ferr\u00e3o", "Mordida G\u00e9lida", "Ampulheta Xelor", "Raio Sombrio", "Teletransporte", "Encolhimento", "Confus\u00e3o", "Poeira Temporal", "Roubo de Tempo", "Ponteiro Explosivo", "Devo\u00e7\u00e3o", "V\u00f4o", "Desmotiva\u00e7\u00e3o", "Prote\u00e7\u00e3o Cegante", "Mumifica\u00e7\u00e3o", "Rel\u00f3gio", "Soco de Xelor", "Disco de Xelor", "Invoca\u00e7\u00e3o de Xelor Dopple", "Rhe Thorn-O"},
++        {"Cara ou coroa", "Sorte de Ecaflip", "Pulo do Gato", "Blefe", "Percep\u00e7\u00e3o", "Repercuss\u00e3o", "Trevo", "Tudo ou Nada", "Roleta", "Topkaj", "L\u00edngua \u00c1spera", "Roda da Fortuna", "Garra Invocativa", "Esp\u00edrito Felino", "Odor", "Reflexo", "Garra Divertida", "Garra de Ceangal", "Rekop", "Destino de Ecaflip", "Invoca\u00e7\u00e3o de Ecaflip Dopple", "Golpe Felino"},
++        {"Palavra do Poder: Explos\u00e3o", "Palavra do Poder: Medo", "Palavra do Poder: Cura", "Palavra do Poder: Restaura\u00e7\u00e3o", "Palavra do Poder: Dor", "Palavra do Poder: Vigor", "Palavra do Poder: Escudo", "Palavra do Poder: Drenar", "Palavra do Poder: Revigorar", "Palavra do Poder: Regenerar", "Palavra do Poder: Espelho", "Palavra do Poder: Desencantar", "Palavra do Poder: Absor\u00e7\u00e3o", "Palavra do Poder: Sacrif\u00edcio", "Palavra do Poder: Cenoura", "Palavra do Poder: Pris\u00e3o", "Palavra do Poder: Levita\u00e7\u00e3o", "Palava do Poder: Sil\u00eancio", "Palavra do Poder: Santu\u00e1rio", "Palavra do Poder: Vida", "Invoca\u00e7\u00e3o de Eniripsa Dopple", "Mot Olov"},
++        {"Intimida\u00e7\u00e3o", "Press\u00e3o", "Salto", "Compuls\u00e3o", "Espada Divina", "Espada de Destino", "Guia de Bravura", "Amplifica\u00e7\u00e3o", "Espada Destrutiva", "Corte", "Sopro", "Vitalidade", "Espada de Julgamento", "Poder", "Mutila\u00e7\u00e3o", "Tempestade de Poder", "Espada Celestial", "Concentra\u00e7\u00e3o", "Espada de Iop", "C\u00f3lera de Iop", "Invoca\u00e7\u00e3o de Iop Dopple", "Brokle"},
++        {"Flecha M\u00e1gica", "Flecha de Recuo", "Flecha Envenenada", "Flecha de Gelo", "Flecha Chama", "Tiro Distante", "Flecha de Expia\u00e7\u00e3o", "Olho de Morcego", "Tiro Cr\u00edtico", "Flecha de Imobiliza\u00e7\u00e3o", "Flecha Punitiva", "Tiro Poderoso", "Flecha da Mol\u00e9stia", "Flecha Cegante", "Olho de Lince", "Flecha Destrutiva", "Flecha Absorvente", "Flecha de Desacelera\u00e7\u00e3o", "Flecha Explosiva", "Per\u00edcia com Arco", "Invoca\u00e7\u00e3o de Cra Dopple", "Flecha Dispersora"},
++        {"Sar\u00e7a", "Veneno Paralisante", "O Bloqueio", "Sacrif\u00edcio de Boneco", "L\u00e1grima", "A Lun\u00e1tica", "Sar\u00e7a Amenizante", "Poder Silvestre", "Boneca Kamikaze", "Terremoto", "Conhecimento de Bonecos", "Sar\u00e7a M\u00faltipla", "\u00c1rvore", "Vento Envenenado", "A Infl\u00e1vel", "Sar\u00e7a Agressiva", "Erva Selvagem", "Inc\u00eandio Florestal", "Sar\u00e7a Insolente", "Boneco Ultrapoderoso", "Invoca\u00e7\u00e3o Sadida Dopple", "\u00c1rvore da Vida"},
++        {"Bica de Sacrier", "Puni\u00e7\u00e3o For\u00e7ada", "Atra\u00e7\u00e3o", "Evas\u00e3o", "Troca", "Assalto", "Puni\u00e7\u00e3o Ligeira", "Dissolu\u00e7\u00e3o", "Puni\u00e7\u00e3o Ousada", "Puni\u00e7\u00e3o Sagrada", "Sacrif\u00edcio", "Absor\u00e7\u00e3o", "Puni\u00e7\u00e3o S\u00e1bia", "Coopera\u00e7\u00e3o", "Transposi\u00e7\u00e3o", "Puni\u00e7\u00e3o", "F\u00faria", "Espada Voadora", "Transfer\u00eancia de Vida", "Loucura Sanguin\u00e1ria", "Invoca\u00e7\u00e3o de Sacrier Dopple", "Dor Compartilhada"},
++        {"Euforia", "Ressaca", "Punho Flamejante", "Terror", "Golpe Euf\u00f3rico", "Vulnerabilidade \u00e0 \u00c1gua", "Vulnerabilidade a Incandescente", "Karcham", "Vulnerabilidade ao Vento", "Estabiliza\u00e7\u00e3o", "Chamrak", "Vulnerabilidade a Terra", "M\u00e1cula", "Leite de Bambu", "Melancolia", "Ira de Zatoishwan", "Frasco Explosivo", "Pandatak", "Pandiniuras", "La\u00e7o Espiritual", "Invoca\u00e7\u00e3o de Pandawa Dopple", "Tontura"}
++    };
++
 +    /** @return indice da classe (0..11) pelo nome, ou -1. Aceita acentos/maiusculas e "sacrieur". */
 +    public static int byName(String name) {
 +        String n = Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("[^A-Za-z]", "").toLowerCase();
@@ -659,6 +715,47 @@ index 0000000..a43918c
 +        SocketManager.GAME_SEND_SPELL_LIST(player);
 +        DatabaseManager.get(PlayerData.class).update(player);
 +        return placed;
++    }
++
++    /**
++     * LabTech: conhece cada feitico das 12 classes a partir do nivel em que a classe original o aprende, sempre no
++     * maior grau que o nivel permite (graus 1 a 5 no nivel de aprender, grau 6 cem niveis depois). Feiticos acima do
++     * nivel sao esquecidos. Nao envia pacotes nem salva. @return nomes dos feiticos novos.
++     */
++    public static List<String> sync(Player player) {
++        List<String> novos = new ArrayList<>();
++        int level = player.getLevel();
++        for (int c = 0; c < SPELLS.length; c++)
++            for (int i = 0; i < SPELLS[c].length; i++) {
++                int id = SPELLS[c][i];
++                Spell spell = World.world.getSort(id);
++                if (spell == null) continue;
++                Spell.SortStats atual = player.getSortStatBySortIfHas(id);
++                if (LEARN[c][i] > level) {
++                    if (atual != null) player.forgetSpellQuiet(id);
++                    continue;
++                }
++                int grau = 1;
++                for (int g = 2; g <= 6; g++) {
++                    Spell.SortStats ss = spell.getStatsByLevel(g);
++                    if (ss != null && ss.getReqLevel() <= level) grau = g;
++                }
++                if (spell.getStatsByLevel(grau) == null) continue;
++                if (atual == null) novos.add(NOMES[c][i]);
++                if (atual == null || atual.getLevel() != grau) player.learnSpell(id, grau, false, false, false);
++            }
++        return novos;
++    }
++
++    /** Feiticos da classe que o personagem ainda nao tem nivel para usar, do mais proximo ao mais distante. */
++    public static List<String> bloqueados(Player player, int classIndex) {
++        List<Integer> idx = new ArrayList<>();
++        for (int i = 0; i < SPELLS[classIndex].length; i++)
++            if (LEARN[classIndex][i] > player.getLevel()) idx.add(i);
++        idx.sort(Comparator.comparingInt(i -> LEARN[classIndex][i]));
++        List<String> out = new ArrayList<>();
++        for (int i : idx) out.add(NOMES[classIndex][i] + " (nv. " + LEARN[classIndex][i] + ")");
++        return out;
 +    }
 +}
 diff --git a/src/org/starloco/locos/panel/PanelBridge.java b/src/org/starloco/locos/panel/PanelBridge.java

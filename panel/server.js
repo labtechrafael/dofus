@@ -334,7 +334,6 @@ api.post('/players/:id/labtech', wrap(async (req) => {
   if (req.body.what === 'kit') {
     const ids = [];
     for (const [tpl, qty] of LABTECH_KIT) ids.push((await send(p, `PITEM ${tpl} ${qty} MAX`, 'kit LabTech')).queued);
-    ids.push((await send(p, `PSPELLS 6 ${Object.values(L.classSpells).flat().join(',')}`, 'feitiços das 12 classes')).queued);
     return { queued: ids };
   }
   throw new Error('Ação desconhecida');

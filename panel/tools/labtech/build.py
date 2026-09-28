@@ -32,7 +32,7 @@ CLIENT = mapgen.CLIENT
 BACKUP = os.path.join(ROOT, 'backup', 'labtech')
 GAME_CONFIG = os.path.join(ROOT, 'server', 'game', 'game.config.properties')
 PANEL_DATA = os.path.abspath(os.path.join(HERE, '..', '..', 'data'))
-LANG_VERSION_BUMP = 520
+LANG_VERSION_BUMP = 530
 WORLD_TILE = (2, -1)
 
 log = print
@@ -271,8 +271,6 @@ def build_npcs(specs, dialog_ids):
     for f in os.listdir(out_dir):
         os.remove(os.path.join(out_dir, f))
 
-    class_spells = json.load(open(os.path.join(PANEL_DATA, 'class-spells.json'), encoding='utf-8'))
-    all_spells = sorted({s for ids in class_spells.values() for s in ids})
     landing = ',\n'.join(f'    [{mid}] = {s["landing"]}' for mid, s in sorted(specs.items()))
     cores = ', '.join(str(30003 + i) for i in range(12))
     lib = f'''-- Gerado por panel/tools/labtech/build.py: funcoes do Mundo LabTech (missao "Com as Proprias Maos").
@@ -280,7 +278,6 @@ LABTECH_LANDING = {{
 {landing}
 }}
 LABTECH_CORES = {{{cores}}}
-LABTECH_SPELLS = {{{', '.join(map(str, all_spells))}}}
 
 function labtechLanding(mapId) return LABTECH_LANDING[mapId] or 0 end
 
@@ -312,9 +309,6 @@ function assembleGauntlet(p)
     for _, id in ipairs(LABTECH_CORES) do p:consumeItem(id, 1) end
     p:consumeItem(30001, 1)
     p:addItem(30002, 1)
-    for _, s in ipairs(LABTECH_SPELLS) do
-        if p:spellLevel(s) < 6 then p:setSpellLevel(s, 6) end
-    end
     return "montada"
 end
 
@@ -549,10 +543,40 @@ def lang_versions():
     return txt, {name: int(ver) for name, _, ver in entries}
 
 
+def spell_level_entries(vers):
+    """Livro de feitiços: o nome de cada feitiço de classe ganha o nível em que ele libera ("Escudo Feca (nv. 80)")
+    e a descrição, o nível de personagem de cada grau. Lê sempre o lang original, então não acumula sufixo."""
+    learn = json.load(open(os.path.join(PANEL_DATA, 'spell-learn-level.json'), encoding='utf-8'))
+    spells = swf_lang.parse_swf(os.path.join(LANG, 'swf', f'spells_pt_{vers["spells"]}.swf'))['S']
+    out = []
+    for sid in C.ALL_CLASS_SPELLS:
+        s = spells.get(sid)
+        if not s:
+            continue
+        nv = max(1, int(learn.get(str(sid), s['l1'][-3])))   # especiais: o lang diz 0
+        grupos = []   # graus seguidos que pedem o mesmo nível
+        for g in range(1, 7):
+            if not s.get(f'l{g}'):
+                continue
+            lv = max(1, s[f'l{g}'][-3])
+            if grupos and grupos[-1][2] == lv:
+                grupos[-1][1] = g
+            else:
+                grupos.append([g, g, lv])
+        texto = f'Liberado no nível {nv}.'
+        if len(grupos) > 1:
+            partes = [(f'{a} a {b}' if a != b else f'{a}') + f' no nível {lv}' for a, b, lv in grupos]
+            texto += ' Graus do feitiço: ' + ', '.join(partes) + '.'
+        out.append((('S', sid), 'n', f'{s["n"]} (nv. {nv})'))
+        out.append((('S', sid), 'd', f'{s.get("d", "")}\n\n{texto}'))
+    return out
+
+
 def build_lang(specs, dialog_ids):
     txt, vers = lang_versions()
     items = C.ITEMS
-    patches = {n: [] for n in ('items', 'itemsets', 'npc', 'dialog', 'maps', 'hints', 'crafts', 'classes')}
+    patches = {n: [] for n in ('items', 'itemsets', 'npc', 'dialog', 'maps', 'hints', 'crafts', 'classes', 'spells')}
+    patches['spells'] = spell_level_entries(vers)
     # classe 13 (LabTech): copia a classe base e sobrescreve textos, custos e feiticos
     base_g = json.load(open(os.path.join(PANEL_DATA, 'lang', 'classes.json'), encoding='utf-8'))['G'][str(C.CLASS13['base_class'])]
     g13 = dict(base_g)
