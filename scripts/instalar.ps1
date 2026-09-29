@@ -89,6 +89,12 @@ if (-not (Test-Path (Join-Path $game 'src\org\starloco\locos\panel\PanelBridge.j
     if ($LASTEXITCODE) { Falha 'o patch do servidor nao encaixou (versao do StarLoco diferente?)' }
     Write-Host '   patch aplicado'
 }
+$login = Join-Path $srv 'login'
+if (-not (Select-String -Quiet -Path (Join-Path $login 'src\org\starloco\locos\kernel\Console.java') -Pattern 'LabTech: sem teclado')) {
+    git -C $login -c core.autocrlf=false apply --whitespace=nowarn (Join-Path $root 'patches\starloco-login.patch')
+    if ($LASTEXITCODE) { Falha 'o patch do login nao encaixou (versao do StarLoco diferente?)' }
+    Write-Host '   patch do login aplicado (console sem 100% de CPU)'
+}
 Copy-Item (Join-Path $root 'config\game.config.properties') (Join-Path $game 'game.config.properties') -Force
 Copy-Item (Join-Path $root 'config\login.config.properties') (Join-Path $srv 'login\login.config.properties') -Force
 

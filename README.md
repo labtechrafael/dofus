@@ -9,6 +9,9 @@ controlar tudo.
 Os LabTechs são inventores que não aceitaram receber poder "de mão beijada" dos deuses. Eles construíram o próprio
 poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e cerveja artesanal feita com as próprias mãos.
 
+| 🧪 13ª classe | 🏝️ 1 arquipélago | 🍺 20 celebridades | 💬 chat vivo | 🐉 65 fichas de chefe | 🗝️ 38 calabouços na rota | 🧍 10 figurantes |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+
 > **Aviso:** projeto de fã, sem fins lucrativos, sem relação com a Ankama. Dofus é marca registrada da Ankama.
 > Este repositório **não contém o jogo** nem arquivos da Ankama. Para jogar, você precisa da sua própria cópia do
 > cliente Dofus Retro 1.39.8. Tudo o que modifica o jogo é aplicado só no seu computador.
@@ -36,6 +39,8 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
   - inventário sem limite de peso;
   - molho de chaves que não acaba;
   - todos os zaaps liberados.
+- **[Mundo vivo](#o-mundo-vivo)**: chat que conversa com você (dicas, builds, drops, forjamagia, chefes, raros,
+  procurados e lugares escondidos), eventos, a Rota dos Calabouços (38, com progresso salvo) e figurantes.
 - **Painel web** (http://127.0.0.1:8080):
   - ligar e desligar o servidor;
   - criar contas e itens;
@@ -44,6 +49,25 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
   - modo escravo, em que os outros personagens seguem o seu;
   - comandos de GM em português;
   - guias do jogo.
+
+## O mundo vivo
+
+Servidor local costuma ser um mundo vazio. Aqui não: o chat conversa com você, o mapa muda enquanto você joga e tem
+gente andando por aí.
+
+![Chat vivo com mensagens reais do servidor](docs/imagens/chat-vivo.png)
+
+- **Quem fala é quem sabe**: o Mercador sugere o item que falta no seu equipamento, o próprio monstro conta a chance
+  de drop dele com a sua prospecção, o anão Gimbo calcula a forjamagia de +1 PA num Gelano, a Milícia avisa onde
+  apareceu o procurado e o Fliperama da Taverna entrega mapas que estão nos arquivos e ninguém acha andando.
+- **Tudo leva a algum lugar**: cada lugar vem com coordenada e `.ir <mapa>` para ir na hora.
+- **Muda o tempo todo**: as mensagens seguem o seu nível, o lugar onde você está e os monstros que estão vivos agora.
+  Quando um raro nasce, o chat avisa.
+- **Eventos**: ao entrar e a cada meia hora, uma invasão, um chefe passeando fora do calabouço ou chuva de drop em
+  dobro num lugar do seu nível.
+- **Figurantes**: 10 personagens que imitam jogadores. Andam, sentam, caçam os monstros do mapa, voltam contando se
+  venceram e anunciam vendas. Não interagem com você: só deixam o mundo com cara de servidor cheio.
+- Cada canal liga e desliga nas caixinhas do chat, e `.chatvivo desliga` cala tudo.
 
 ## Imagens
 
@@ -119,6 +143,11 @@ O instalador baixa sozinho, das fontes oficiais:
 |---|---|---|
 | Chat | `.raca feca` … `.raca pandawa` | Monta a barra de feitiços com os feitiços daquela classe |
 | Chat | `.drone` (`.drone mudo`, `.drone volta`) | O Drone de IA fala na hora (ou fica quieto) |
+| Chat | `.dica` `.build` `.conjunto` `.drop` `.fm` `.chefe` `.curiosidade` | O chat vivo mostra na hora |
+| Chat | `.procurado` `.raro` `.segredo` | Procurados, monstros raros e lugares escondidos, com o caminho |
+| Chat | `.calaboucos` `.evento` | Rota dos Calabouços e o evento do momento |
+| Chat | `.ir 1234` (ou só `.ir`) | Leva você ao mapa (sem número: ao último lugar anunciado) |
+| Chat | `.chatvivo desliga` / `.chatvivo liga` | Desliga ou liga o chat vivo |
 | Console de admin | `ITEM 10207` | Dá o molho de chaves (entra em qualquer masmorra) |
 | Console de admin | `ALIGN 1` e depois `HONOR 18000` | Bonta com grau 10 (`ALIGN 2` = Brâkmar) |
 | Menu de admin do cliente | (já traduzido) | Níveis, feitiços, teleporte, grupos de monstros, alinhamento… |

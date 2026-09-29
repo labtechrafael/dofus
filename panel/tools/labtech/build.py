@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..', '..', 'world', 'labt
 
 import art  # noqa: E402
 import celebs  # noqa: E402
+import chatvivo  # noqa: E402
 import classe13  # noqa: E402
 import content as C  # noqa: E402
 import mapgen  # noqa: E402
@@ -575,7 +576,9 @@ def spell_level_entries(vers):
 def build_lang(specs, dialog_ids):
     txt, vers = lang_versions()
     items = C.ITEMS
-    patches = {n: [] for n in ('items', 'itemsets', 'npc', 'dialog', 'maps', 'hints', 'crafts', 'classes', 'spells')}
+    patches = {n: [] for n in ('items', 'itemsets', 'npc', 'dialog', 'maps', 'hints', 'crafts', 'classes', 'spells', 'lang')}
+    # chat vivo: os canais de recrutamento, comércio e Incarnam viram Dicas, Itens e Chefes
+    patches['lang'] = [((chave,), None, texto) for chave, texto in C.CHAT_VIVO['canais'].items()]
     patches['spells'] = spell_level_entries(vers)
     # classe 13 (LabTech): copia a classe base e sobrescreve textos, custos e feiticos
     base_g = json.load(open(os.path.join(PANEL_DATA, 'lang', 'classes.json'), encoding='utf-8'))['G'][str(C.CLASS13['base_class'])]
@@ -784,6 +787,7 @@ def main():
     build_craft_skills()
     build_shops()
     build_drone()
+    chatvivo.gerar(log, sql_query, PANEL_DATA, SCRIPTS, LANG, lang_versions()[1]['spells'])
     build_icons()
     if '--sem-lang' not in args:
         build_lang(specs, dialog_ids)

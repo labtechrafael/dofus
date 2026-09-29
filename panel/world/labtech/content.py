@@ -391,6 +391,192 @@ DRONE = {
     ],
 }
 
+# ----------------------------------------------------------------- Chat vivo
+# O chat conversa com o jogador conforme o que ele está fazendo, o nível e o lugar. Cada tipo usa um canal do jogo
+# (o jogador liga e desliga nas caixinhas do chat):
+#   Dicas (canal cinza, "Estagiário"), Equipamentos (marrom, "Mercador LabTech", com itens clicáveis),
+#   Chefes (rosa, "Juiz da Arena") e Informações (verde: o lugar onde você entrou, curiosidades e segredos).
+# Builds, conjuntos, fichas de chefes e zonas saem dos dados do jogo (panel/tools/labtech/chatvivo.py).
+# Marcadores preenchidos pelo servidor: {nome} {nivel} {capital} {pontos} {slot} {nivel_item} {zona} {faixa}
+# {mobs} {chefes} {xp} {drop} {kamas} {profissao}. °0 vira o item clicável. Nada de "|" nas frases.
+CHAT_VIVO = {
+    'intervalo': (35, 70),   # segundos entre uma mensagem e outra, sorteado
+    'boas_vindas': [
+        'Chat vivo ligado, {nome}! Aqui aparecem Dicas (canal cinza), Itens: builds, drops e forjamagia (marrom, '
+        'clique no item para ver), Chefes, procurados e eventos (rosa) e o que tem em cada lugar (verde). Ligue e '
+        'desligue cada um nas caixinhas do chat. Comandos: .dica .build .drop .fm .chefe .procurado .raro .segredo '
+        '.calaboucos .evento .ir e .chatvivo desliga',
+    ],
+    # dicas conforme o personagem: (quem fala, frases)
+    'dicas': {
+        'capital': ('Mestre Malte', ['{nome}, você tem {capital} pontos de capital parados! Abra as Características '
+                                     '(tecla C). Sabedoria custa 3 pontos por 1; vitalidade é o que mais segura pancada.']),
+        'feitico': ('Mestre Malte', ['Você tem {pontos} pontos de feitiço guardados. Suba os feitiços que você mais usa.']),
+        'slot': ('Mercador LabTech', ['Você está sem {slot}! Para o nível {nivel} eu tenho °0. Estou ao lado do zaap de Bonta e de Brâkmar.']),
+        'upgrade': ('Mercador LabTech', ['Esse seu {slot} é de nível {nivel_item} e você já está no {nivel}. Troca por °0, sai na hora.']),
+        'profissao': ('Taverneiro Barril', ['Você ainda não tem profissão? Na Oficina das Próprias Mãos tem 14 bancadas. '
+                                            'Alquimista faz cerveja, e cerveja paga as contas.']),
+        'alinhamento': ('Ragnar', ['Nível {nivel} e ainda sem lado? Bonta ou Brâkmar, escolha! Alinhamento dá asas, '
+                                   'prismas e honra. Guerreiro sem bandeira é só um viking perdido.']),
+        'montaria': ('Grandão Guarda-Caça', ['Nível {nivel} e andando a pé? Um Dragoperu dá atributos e corre mais que '
+                                             'você. Tem na prateleira Familiares e montarias do Mercador. Bicho é família!']),
+        'nivel100': ('Mestre Malte', ['Nível {nivel}! No nível 100 todo personagem ganha +1 PA para sempre. Falta pouco.']),
+        'vida': ('Homero Simplório', ['Sua vida está em {vida}%. Senta um pouco, ou toma uma cerveja LabTech: cura 500 PV. Hmmm, cerveja...']),
+        'energia': ('Dona Levedura', ['Sua energia está em {energia}. Com energia zero você vira fantasma: descanse um pouco, querido.']),
+        'onde_upar': ('O Estagiário', ['Para o seu nível ({nivel}): {zona}, monstros de nível {faixa}: {mobs}. Quer ir? .ir {mapa}',
+                                       'Calculei o melhor lugar para upar agora: {zona} ({faixa}). Tem {mobs}. Para ir: .ir {mapa}']),
+        'chefe_nivel': ('Juiz da Arena', ['Chefes na sua faixa de nível: {chefes}. Digite .chefe e eu mostro a ficha de um.']),
+        'rates': ('Rique Sanches', ['Ciência, {nome}: neste servidor a XP é x{xp} e o drop x{drop}. Chance final = % do '
+                                    'monstro × (prospecção ÷ 100) × rate. Sua prospecção: {prosp}. Arrgh, matemática.']),
+        'geral': ('Tirino, o Estrategista', [
+            'Sabedoria aumenta a experiência de cada luta. Quem pensa sobe mais rápido. Eu sei das coisas.',
+            'Iniciativa decide quem joga primeiro. Começar a luta vale mais que 50 de força.',
+            'Esquiva PA e esquiva PM protegem contra quem tira PA e PM. Contra chefes que prendem, salvam vidas.',
+            'Resistência em % corta o dano daquele elemento. Um item com 10% de resistência vale ouro nos chefes.',
+            'Salve o ponto no zaap de cada cidade que visitar. Um bom estrategista nunca anda duas vezes o mesmo caminho.',
+            'O molho de chaves LabTech (item 10207) abre qualquer calabouço e nunca acaba.',
+            'Clique no nome de um item no chat para ver os atributos dele antes de comprar.',
+            'Conjunto completo dá bônus extra, às vezes PA e PM. Troque de conjunto quando subir de faixa.',
+            'Monstro muito acima do seu nível dá muita XP, mas derrota tira energia. Vá em grupo.',
+            'Forjamagia: runas mudam os atributos de um item. Runa Fo dá força, Runa Ine inteligência, Runa Age agilidade.',
+        ]),
+    },
+    'dicas_nivel': {
+        (1, 20): ['Começo de jornada: o Campo de Teste 1 da ilha LabTech (nível 1 a 50) tem Gobball, Tofu, Larvas e Corvos.'],
+        (20, 50): ['Nível {nivel}: ainda vale o Campo de Teste 1. Junte malte, lúpulo e levedura para fazer cerveja na Oficina.'],
+        (50, 100): ['Nível {nivel}: o Campo de Teste 2 (50 a 100) tem Dragonetes, Kaniger e Piralak. Monte o grupo e aproveite o drop.'],
+        (100, 150): ['Nível {nivel}: o Campo de Teste 3 (100 a 150) tem Snailmet, Trool, Mestre Koalak e Mushnid. A Arena já dá em grupo.'],
+        (150, 301): ['Nível {nivel}: Campo de Teste 4 (150+) e a Arena LabTech, com os chefes mais fortes do jogo.'],
+    },
+    # curiosidades e segredos: (quem fala, texto)
+    'curiosidades': [
+        ('Rique Sanches', 'Os Dofus são ovos de dragão, *arrot*. Dofus Esmeralda, Turquesa, Ébano, Marfim... atributos '
+                          'enormes. Eu já tive seis. Em outra dimensão.'),
+        ('Grandão Guarda-Caça', 'O Gobball é o monstro mais famoso do jogo. A lã dele entra em dezenas de receitas. Bichinho lindo!'),
+        ('Capitão Pardal', 'Os zaaps são portais antigos. Todo zaap visitado fica salvo para sempre. Melhor que navio, e olha que eu amo navio.'),
+        ('O Estagiário', 'Incarnam é a terra dos iniciantes, flutuando acima do mundo. Dela se desce para Astrub.'),
+        ('Ragnar', 'Bonta é a cidade dos anjos e Brâkmar a dos demônios. A guerra entre as duas move o alinhamento.'),
+        ('Grandão Guarda-Caça', 'O Dofus Cenouwawa vem da ilha dos Wabbits, os coelhos que adoram cenoura.'),
+        ('Capitão Pardal', 'Pandala é uma ilha de quatro elementos: Água, Terra, Fogo e Ar, mais a parte neutra. E muito saquê.'),
+        ('Rique Sanches', 'Otomai era um alquimista. A ilha dele tem pântano, árvore gigante e experimentos que deram errado. Amador.'),
+        ('Grandão Guarda-Caça', 'No Dofus Retro os Dragoperus são as montarias: dá para criar, cruzar e treinar no cercado.'),
+        ('Dionísio', 'Cada classe tem um deus. O LabTech é o único sem nenhum. Eu aprovo: menos concorrência na festa.'),
+        ('Rique Sanches', 'Este mundo tem {monstros} monstros, {itens} itens e {conjuntos} conjuntos, e {chefes} chefes. '
+                          'Eu contei. Duas vezes. Bêbado.'),
+    ],
+    'segredos': [
+        ('Fliperama da Taverna', 'CÓDIGO SECRETO: no Laboratório, digite no chat o código mais famoso dos videogames.'),
+        ('Fliperama da Taverna', 'Existe um mapa que não aparece em nenhum elevador. Lá o Mestre Malte forja o Dofus Fermentado.'),
+        ('Mané do Balcão', 'O Bar das Celebridades tem 20 famosos e cada um tem uma pergunta extra. Converse com todos, é por conta da casa.'),
+        ('Juiz da Arena', 'Os 12 chefes dos núcleos soltam o núcleo sempre, 100%. Não precisa de prospecção.'),
+        ('O Estagiário', 'O Drone de IA equipado fala sozinho. Digite .drone para ele comentar o lugar onde você está.'),
+    ],
+    # pastas de mapas do servidor que o jogador não encontra andando: (pasta, nome, nota)
+    'pastas_secretas': [
+        ('secrets', 'Túnel Misterioso de Amakna', 'Um túnel escondido nos arquivos, guardado por um monstro sozinho.'),
+        ('moderation', 'Sala da Moderação', 'Onde os moderadores levavam quem aprontava. {mapas} salas.'),
+        ('dutyfree', 'Duty Free', 'Uma zona de compras com zaap próprio, fora do mapa-múndi. {mapas} mapas.'),
+        ('nowel', 'Ilha de Natal', 'A ilha do evento de fim de ano, fechada o resto do ano. {mapas} mapas de neve.'),
+        ('temporis', 'Torre dos Desafios', 'Uma torre de um modo de jogo que nunca abriu aqui.'),
+        ('pvp', 'Arenas do Torneio', 'As arenas do Goultarminator e do Torneio Mundo do Jogo. {mapas} mapas.'),
+    ],
+    # subáreas marcadas como internas no jogo (nome começa com //): id -> nota
+    'subareas_ocultas': {
+        110: 'Amakna como era antigamente. {mapas} mapas que ninguém visita.',
+        78: 'Uma dimensão de geleia. Isso mesmo. {mapas} mapas.',
+        85: 'O mapa de um minigame com Gobballs.',
+        83: 'O tutorial antigo do jogo, esquecido nos arquivos. {mapas} mapas.',
+        450: 'A saída de um templo de Incarnam. {mapas} mapas.',
+        448: 'Mapas avulsos de Incarnam que não entraram no jogo. {mapas} mapas.',
+        74: 'O treinamento dos Dopples. {mapas} mapas.',
+        287: 'A solitária do calabouço dos Bworks.',
+        229: 'A toca escondida da Caverna de Koolich. {mapas} mapas.',
+    },
+    # mensagens montadas pelo servidor: (quem fala, frases). '{mob}' como quem fala = o próprio monstro.
+    'modelos': {
+        'build': ('Mercador LabTech', ['Build de {elemento} para o nível {nivel_build}: {itens}. Tudo à venda comigo, ao lado do zaap de Bonta e de Brâkmar.',
+                                       'Para quem joga de {elemento} no nível {nivel_build}, eu montaria assim: {itens}.']),
+        'conjunto': ('Lúpula', ['Conjunto para o seu nível: {conjunto} (nível {nivel_item}). Completo dá {resumo}. Peças: {itens}.']),
+        'drop_aqui': ('{mob}', ['Somos {qtd} aqui em {zona} [{x},{y}]. Cada um de nós pode soltar {item}: {chance}% para você. Duvido! {como_ir}',
+                                'Tem {qtd} de nós em {zona} [{x},{y}], e eu guardo {item} ({chance}% com a sua prospecção de {prosp}). {como_ir}']),
+        'drop_dofus': ('{mob}', ['Eu guardo um {item}! Chance para você: {chance}% por luta. Estou em {zona} [{x},{y}]. {como_ir}']),
+        'fm': ('Gimbo, o Anão', ['Forjamagia no {item}: +1 PA com {runa_pa} dá {pa}% de chance ({pa_sc}% de sucesso crítico). +1 PM com {runa_pm}: {pm}%. Forjamagista nível 100, item de jet médio.',
+                                 'Martelo na mão: colocar PA no {item} com {runa_pa} = {pa}%. PM com {runa_pm} = {pm}%. Por Durin, tenta!']),
+        'chefe_ficha': ('Juiz da Arena', ['{ficha}']),
+        'chefe_dica': ('Juiz da Arena', ['{dica}']),
+        'chefe_drop': ('{mob}', ['Se me vencer, talvez eu solte: {drops}. Isso com a sua prospecção de {prosp}.']),
+        'chefe_onde': ('{mob}', ['Estou agora em {zona} [{x},{y}]. Venha, se tiver coragem. {como_ir}']),
+        'raro': ('{mob}', ['Apareci! Estou em {zona} [{x},{y}], nível {nivel_mob}. Pouca gente me vê. {como_ir}',
+                           'Sou raro e estou em {zona} [{x},{y}] agora. Nível {nivel_mob}. Corre! {como_ir}']),
+        'procurado': ('Guarda da Milícia', ['PROCURADO: {mob}, nível {nivel_mob}, fugiu da prisão! {onde} O quadro de procurados fica em Astrub [7,-18]. {como_ir}',
+                                            'Recompensa pela captura de {mob} (nível {nivel_mob})! {onde} {como_ir}']),
+        'calabouco': ('Juiz da Arena', ['Rota dos Calabouços: {feitos} de {total} concluídos. Próximo para o seu nível: {calabouco} (chefe {chefe}, nível {faixa}). {como_ir}']),
+        'calabouco_ok': ('Juiz da Arena', ['{calabouco} concluído por {nome}! Rota dos Calabouços: {feitos} de {total}.']),
+        'calabouco_fim': ('Mestre Malte', ['{nome} passou por TODOS os calabouços do mundo! Nenhum deus fez isso. Só gambiarra e coragem.']),
+        'secreto': ('Fliperama da Taverna', ['LUGAR ESCONDIDO: {local} [{x},{y}], mapa {mapa}. {nota} {como_ir}']),
+        'zona': ('', ['Você entrou em <b>{zona}</b>. Monstros daqui: {mobs}.']),
+        'zona_drop': ('{mob}', ['Bem-vindo à minha área! Eu posso soltar {item}: {chance}% para você.']),
+        'como_ir': ('', ['Para ir: digite .ir {mapa}']),
+    },
+    # eventos do mundo: (quem fala, frases). Um evento começa quando você entra no jogo e a cada meia hora.
+    'eventos': {
+        'invasao': ('{mob}', ['EVENTO: invasão! Somos {qtd} {mob} em {zona} [{x},{y}], nível {faixa}. Quem nos vencer ganha drop em dobro nessa luta. {como_ir}']),
+        'chefe': ('{mob}', ['EVENTO: {mob} saiu do calabouço e está passeando em {zona} [{x},{y}]! Nível {nivel_mob}. Drop em dobro para quem me vencer. {como_ir}']),
+        'chuva': ('Dionísio', ['EVENTO: chuva de drop em {zona}! Por {minutos} minutos, toda luta lá tem drop em dobro. A festa é por minha conta. {como_ir}']),
+        'fim': ('Juiz da Arena', ['O evento em {zona} acabou. Fique de olho: logo começa outro.']),
+        'vencido': ('Juiz da Arena', ['{nome} venceu o evento em {zona}! Drop em dobro garantido.']),
+    },
+    # nomes dos canais do chat no cliente (lang): os canais de recrutamento, comércio e Incarnam viram os do chat vivo
+    'canais': {
+        'RECRUITMENT': 'Dicas', 'TRADE': 'Itens', 'MEETIC': 'Chefes',
+        'CHAT_TYPE6': 'Exibir / Ocultar as Dicas do chat vivo: o que fazer agora, pontos para distribuir, equipamento '
+                      'vazio, onde upar, curiosidades e segredos do jogo.',
+        'CHAT_TYPE7': 'Exibir / Ocultar os Itens do chat vivo: builds e conjuntos para o seu nível, chance de drop dos '
+                      'monstros perto de você e chance de forjamagia. Clique no item para ver os atributos.',
+        'CHAT_TYPE8': 'Exibir / Ocultar os Chefes do chat vivo: fichas e estratégia dos chefes, monstros raros, '
+                      'procurados, a Rota dos Calabouços e os eventos do mundo.',
+    },
+    # os fugitivos dos avisos de procurado (quadro em Astrub): Braco Scalptaras, Padgref, Frakacia, Ogivol, Fouduglen,
+    # Brumen, Qil Bil, Rok Gnorok, Musha, Marzwel e Zatoishwan
+    'procurados': [446, 459, 460, 462, 463, 464, 481, 550, 552, 554, 555],
+    'chefe_notas': {   # dica extra escrita à mão, pela id do monstro
+        113: 'Ele mora no fim do labirinto do Dragão Porco: o molho de chaves LabTech abre o calabouço.',
+        121: 'Fica no labirinto da Ilha do Minotoro. Leve pão: o caminho até ele é longo.',
+    },
+}
+
+# ----------------------------------------------------------------- Figurantes (personagens que imitam jogadores)
+# Aparecem perto de quem está jogando: andam pelo mapa, sentam, conversam, caçam os monstros do mapa (somem na
+# luta e voltam), contam o que dropou e anunciam vendas no canal de Itens. Eles vivem a vida deles: não falam com
+# quem está jogando, não chamam pelo nome e não dão itens.
+# Marcadores: {mob} monstro, {item} °0 (item clicável), {classe}, {nivel}, {preco}. Nada de "|" nas frases.
+FIGURANTES = {
+    'quantidade': 10,
+    'apelidos': ['Iopzinho', 'CraDoSertao', 'Xelor_Feliz', 'SacroBR', 'PandaLindo', 'EniCura', 'FecaTanque',
+                 'SramDaMadruga', 'Osa-Zoo', 'EnuRico', 'SadidaRaiz', 'EcaSortudo', 'Bia-Iop', 'LeoCra', 'ZeDoTofu',
+                 'Mari-Eni', 'Kaka-Xel', 'Duda-Sac', 'Nando-Enu', 'Rafa-Panda', 'Gabi-Feca', 'Juju-Osa', 'Teteu-Sram',
+                 'Carlinhos-Eca', 'Lulu-Sadi', 'Vitão', 'Nina_Cra', 'Pedrinho', 'Manu-Xel', 'Guga-Iop'],
+    'falas': {
+        'oi': ['oi', 'eae', 'salve galera', 'bom dia', 'boa noite povo', 'cheguei', 'voltei, bora farmar',
+               'que mapa lotado hoje'],
+        'passeio': ['to perdido kkk', 'cadê o zaap...','vou upar aqui mesmo', 'que lag',
+                    'meu pc ta pegando fogo', 'faltam 2 peças pro meu set', 'hoje eu upo uns 5 níveis',
+                    'vcs já viram essa classe LabTech? a manopla é roubada', 'ainda vou ter um drone que fala',
+                    'fui no bar das celebridades e o gaulês me ofereceu poção kkkkk',
+                    'dizem que tem uma forja secreta no LabTech', 'drop x3 nesse server é muito bom'],
+        'luta': ['bora {mob}!', 'lá vou eu de novo nos {mob}', 'farmando {mob} desde ontem kkk', 'vem {mob}, vem',
+                 'esse grupo de {mob} é meu hein', 'última luta e vou dormir'],
+        'venci': ['gg ez', 'foi fácil', 'mais um grupo de {mob} pra conta', 'vlw pela luta {mob} kkk',
+                  'dropou nada de novo...', 'upei!!! nível {nivel}', 'quase morri kkkk'],
+        'perdi': ['morri pros {mob} kkkkk', 'LAG!!! não conta', 'esqueci de curar...', 'voltando pra fênix a pé kkk'],
+        'drop': ['dropei {item}!!!', 'caiu {item}, finalmente', 'olha o que caiu: {item}', '{item} de novo? já tenho 3 kkk'],
+        'venda': ['Vendo {item} por {preco} kamas', 'Vendo {item} jet bom, {preco}k', 'Compro {item}',
+                  'Troco {item} por qualquer Dofus kkk', 'Vendo {item} barato, preciso de kamas',
+                  'Passei PA no meu {item} de primeira!!!'],
+        'tchau': ['vou nessa, flw', 'bora pro próximo mapa', 'fui, vlw', 'indo pro zaap'],
+    },
+}
+
 # Drops: nucleos 100% nos chefes; ingredientes nos monstros dos Campos de Teste
 RESOURCE_DROPS = [(30017, 12.0), (30015, 10.0), (30016, 8.0)]
 

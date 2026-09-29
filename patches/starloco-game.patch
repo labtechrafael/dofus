@@ -59,7 +59,7 @@ index ddacb51..20217e8 100644
  
  JobLevelExp = { 0, 50, 140, 271, 441, 653, 905, 1199, 1543, 1911, 2330, 2792, 3297, 3840, 4439, 5078, 5762, 6493, 7280, 8097, 8980, 9898, 10875, 11903, 12985, 14122, 15315, 16564, 17873, 19242, 20672, 22166, 23726, 25353, 27048, 28815, 30656, 32572, 34566, 36641, 38800, 41044, 43378, 45804, 48325, 50946, 53669, 56498, 59437, 62491, 65664, 68960, 72385, 75943, 79640, 83482, 87475, 91624, 95937, 100421, 105082, 109930, 114971, 120215, 125671, 131348, 137256, 143407, 149811, 156481, 163429, 170669, 178214, 186080, 194283, 202839, 211765, 221082, 230808, 240964, 251574, 262660, 274248, 286364, 299037, 312297, 326175, 340705, 355924, 371870, 388582, 406106, 424486, 443772, 464016, 485274, 507604, 531071, 555541, 581687}
 diff --git a/src/org/starloco/locos/client/Player.java b/src/org/starloco/locos/client/Player.java
-index 6ba6d0f..c5784de 100644
+index 6ba6d0f..d21a1a6 100644
 --- a/src/org/starloco/locos/client/Player.java
 +++ b/src/org/starloco/locos/client/Player.java
 @@ -509,7 +509,7 @@ public class Player implements Scripted<SPlayer>, Actor {
@@ -161,7 +161,7 @@ index 6ba6d0f..c5784de 100644
          SocketManager.GAME_SEND_Rx_PACKET(this);
          SocketManager.GAME_SEND_ASK(client, this);
  
-@@ -1883,6 +1943,11 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -1883,6 +1943,12 @@ public class Player implements Scripted<SPlayer>, Actor {
          //Actualisation dans la DB
          DatabaseManager.get(AccountData.class).updateLastConnection(getAccount());
          SocketManager.GAME_SEND_MESSAGE(this, Config.startMessage.isEmpty() ? this.getLang().trans("client.player.onjoingame.startmessage") : Config.startMessage);
@@ -170,10 +170,11 @@ index 6ba6d0f..c5784de 100644
 +        if (novos != null && !novos.isEmpty())
 +            sendMessage("Manopla recalibrada: " + novos.size() + (novos.size() == 1 ? " feiti\u00e7o novo liberado" : " feiti\u00e7os novos liberados") + " para o seu n\u00edvel.");
 +        org.starloco.locos.panel.DroneTalk.onLogin(this); // Mundo LabTech: o Drone de IA cumprimenta
++        org.starloco.locos.panel.ChatVivo.onLogin(this); // Mundo LabTech: chat vivo e eventos do mundo
          for (GameObject object : this.objects.values()) {
              if (object.getTemplate().getType() == Constant.ITEM_TYPE_FAMILIER) {
                  PetEntry p = World.world.getPetsEntry(object.getGuid());
-@@ -2337,6 +2402,7 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -2337,6 +2403,7 @@ public class Player implements Scripted<SPlayer>, Actor {
      }
  
      public int getMaxPod() {
@@ -181,11 +182,12 @@ index 6ba6d0f..c5784de 100644
          Stats total = new Stats(false, null);
          total = Stats.cumulStat(total, this.getStats());
          total = Stats.cumulStat(total, this.getStuffStats());
-@@ -2751,6 +2817,7 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -2751,6 +2818,8 @@ public class Player implements Scripted<SPlayer>, Actor {
          if (this.getLevel() == 100)
              this.getStats().addOneStat(Constant.STATS_ADD_PA, 1);
          Constant.onLevelUpSpells(this, this.getLevel());
 +        if (isOnline) org.starloco.locos.panel.DroneTalk.onLevelUp(this); // Mundo LabTech: o drone comenta
++        if (isOnline) org.starloco.locos.panel.ChatVivo.onLevelUp(this); // Mundo LabTech: build do nivel novo
          if (addXp)
              this.exp =  xpTable.minXpAt(this.getLevel());
          if (send && isOnline) {
@@ -203,10 +205,10 @@ index e7289cd..dd3d954 100644
                  return "Unk";
          }
 diff --git a/src/org/starloco/locos/command/CommandPlayer.java b/src/org/starloco/locos/command/CommandPlayer.java
-index 4fd74d5..0c91231 100644
+index 4fd74d5..1780b52 100644
 --- a/src/org/starloco/locos/command/CommandPlayer.java
 +++ b/src/org/starloco/locos/command/CommandPlayer.java
-@@ -47,6 +47,34 @@ public class CommandPlayer {
+@@ -47,6 +47,38 @@ public class CommandPlayer {
                  return commandInterval(player, msg);
              } else if(command(msg, "start") || command(msg, "astrub")) {
                  return commandAstrub(player, msg);
@@ -225,6 +227,10 @@ index 4fd74d5..0c91231 100644
 +                        player.sendMessage("Ainda bloqueados (liberam ao subir de n\u00edvel): " + String.join(", ", falta) + ".");
 +                }
 +                return true;
++            } else if (org.starloco.locos.panel.ChatVivo.comando(player, msg)) {
++                // Mundo LabTech: .dica .build .conjunto .drop .fm .chefe .procurado .raro .segredo .curiosidade
++                // .calaboucos .evento .ir .chatvivo
++                return true;
 +            } else if (command(msg, "drone")) {
 +                // Mundo LabTech: .drone faz o Drone de IA falar; .drone mudo / .drone volta
 +                String[] parts = msg.trim().split("\\s+", 2);
@@ -241,7 +247,7 @@ index 4fd74d5..0c91231 100644
              } else if(command(msg, "walkfast")) {
                  player.walkFast = !player.walkFast;
                  return true;
-@@ -499,6 +527,16 @@ public class CommandPlayer {
+@@ -499,6 +531,16 @@ public class CommandPlayer {
          return true;
      }
  
@@ -278,32 +284,64 @@ index adca644..ba7e8fd 100644
  client.account.addfriend.notexist.account: "La cuenta no existe."
  client.account.addfriend.notexist.player: "El jugador no existe."
 diff --git a/src/org/starloco/locos/fight/Fight.java b/src/org/starloco/locos/fight/Fight.java
-index 36c6784..d507573 100644
+index 36c6784..01f499c 100644
 --- a/src/org/starloco/locos/fight/Fight.java
 +++ b/src/org/starloco/locos/fight/Fight.java
-@@ -1162,6 +1162,8 @@ public class Fight {
+@@ -999,7 +999,7 @@ public class Fight {
+         this.curAction = curAction;
+     }
+ 
+-    MonsterGroup getMobGroup() {
++    public MonsterGroup getMobGroup() {
+         return monsterGroup;
+     }
+ 
+@@ -1162,6 +1162,10 @@ public class Fight {
          this.checkTimer = false;
          SocketManager.GAME_SEND_GIC_PACKETS_TO_FIGHT(this, 7);
          SocketManager.GAME_SEND_GS_PACKET_TO_FIGHT(this, 7);
 +        if (getType() == Constant.FIGHT_TYPE_PVM)
 +            org.starloco.locos.panel.DroneTalk.onFightStart(this); // Mundo LabTech: o drone comenta a luta
++        if (getType() == Constant.FIGHT_TYPE_PVM)
++            org.starloco.locos.panel.ChatVivo.onFightStart(this); // Mundo LabTech: ficha do chefe no chat
          initOrderPlaying();
          setCurPlayer(-1);
          SocketManager.GAME_SEND_GTL_PACKET_TO_FIGHT(this, 7);
-@@ -3859,6 +3861,8 @@ public class Fight {
+@@ -3859,6 +3863,10 @@ public class Fight {
                      this.winners.addAll(copyTeam0.values());
                      losers.addAll(copyTeam1.values());
                  }
 +                if (Constant.FIGHT_TYPE_PVM == this.type)
 +                    org.starloco.locos.panel.DroneTalk.onFightEnd(this, this.winners); // Mundo LabTech
++                if (Constant.FIGHT_TYPE_PVM == this.type)
++                    org.starloco.locos.panel.ChatVivo.onFightEnd(this, this.winners); // Mundo LabTech: calabouços e eventos
  
  
                  if (Constant.FIGHT_TYPE_PVM == this.type) {
+@@ -4859,7 +4867,8 @@ public class Fight {
+ 
+ 
+                             final double jet = Math.random() * 100;
+-                            final double chance = drop.getLocalPercent() * prospecting * World.world.getConquestBonus(player) * challengeFactor * starFactor * Config.rateDrop;
++                            final double chance = drop.getLocalPercent() * prospecting * World.world.getConquestBonus(player) * challengeFactor * starFactor * Config.rateDrop
++                                    * org.starloco.locos.panel.ChatVivo.multiplicadorDrop(this); // Mundo LabTech: drop em dobro nos eventos
+                             boolean ok = false;
+ 
+                             switch (drop.getAction()) {
 diff --git a/src/org/starloco/locos/game/GameClient.java b/src/org/starloco/locos/game/GameClient.java
-index 39f2a30..cc3533c 100644
+index 39f2a30..4e1298c 100644
 --- a/src/org/starloco/locos/game/GameClient.java
 +++ b/src/org/starloco/locos/game/GameClient.java
-@@ -5892,7 +5892,7 @@ public class GameClient {
+@@ -4543,6 +4543,8 @@ public class GameClient {
+             SocketManager.SEND_GM_PRISME_TO_MAP(this, this.player.getCurMap());
+             // Merchant
+             SocketManager.GAME_SEND_MERCHANT_LIST(this.player);
++            // Mundo LabTech: figurantes que imitam jogadores
++            org.starloco.locos.panel.Figurantes.onMapLoad(this.player);
+             // Houses
+             World.world.getHouseManager().load(this.player, this.player.getCurMap().getId());
+             // Collector
+@@ -5892,7 +5894,7 @@ public class GameClient {
                      return;
  
  
@@ -312,7 +350,7 @@ index 39f2a30..cc3533c 100644
                      SocketManager.GAME_SEND_Im_PACKET(this.player, "119|44;"+object.getTemplate().getId()); // si le this.player ne v?rifie pas les conditions diverses
                      return;
                  }
-@@ -5916,7 +5916,7 @@ public class GameClient {
+@@ -5916,7 +5918,7 @@ public class GameClient {
  
                  }
  
@@ -321,7 +359,7 @@ index 39f2a30..cc3533c 100644
                      SocketManager.GAME_SEND_OAEL_PACKET(this);
                      return;
                  }
-@@ -6261,7 +6261,7 @@ public class GameClient {
+@@ -6261,7 +6263,7 @@ public class GameClient {
          if (obj == null)
              return;
          ObjectTemplate T = obj.getTemplate();
@@ -330,7 +368,7 @@ index 39f2a30..cc3533c 100644
              SocketManager.GAME_SEND_Im_PACKET(this.player, "119|43");
              return;
          }
-@@ -6881,6 +6881,25 @@ public class GameClient {
+@@ -6881,6 +6883,25 @@ public class GameClient {
          }
      }
  
@@ -356,7 +394,7 @@ index 39f2a30..cc3533c 100644
      private void boostSpell(String packet) {
          try {
              int id = Integer.parseInt(packet.substring(2));
-@@ -6890,6 +6909,7 @@ public class GameClient {
+@@ -6890,6 +6911,7 @@ public class GameClient {
                  SocketManager.GAME_SEND_STATS_PACKET(this.player);
              } else {
                  SocketManager.GAME_SEND_SPELL_UPGRADE_FAILED(this);
@@ -577,7 +615,7 @@ index b741cb4..029cc55 100644
                  return "Osamodas";
              case CLASS_IOP:
 diff --git a/src/org/starloco/locos/kernel/Main.java b/src/org/starloco/locos/kernel/Main.java
-index f6e5e5f..1bc8aa1 100644
+index f6e5e5f..9060857 100644
 --- a/src/org/starloco/locos/kernel/Main.java
 +++ b/src/org/starloco/locos/kernel/Main.java
 @@ -89,7 +89,7 @@ public class Main {
@@ -585,7 +623,7 @@ index f6e5e5f..1bc8aa1 100644
  	        final List<Updatable> updatables = Arrays.asList(
  	                WorldSave.instance, GameMap.updatable, Mount.updatable,
 -                    WorldPub.instance,
-+                    WorldPub.instance, org.starloco.locos.panel.PanelBridge.instance, org.starloco.locos.panel.DroneTalk.instance,
++                    WorldPub.instance, org.starloco.locos.panel.PanelBridge.instance, org.starloco.locos.panel.DroneTalk.instance, org.starloco.locos.panel.ChatVivo.instance, org.starloco.locos.panel.Figurantes.instance,
                      AuctionManager.getInstance(), /*Tavernier.getInstance(),*/ EventManager.getInstance());
  
              while (Config.isRunning) {
@@ -661,6 +699,1380 @@ index deaf73c..879c77c 100644
  
                      if(!ok) {
                          if (!player.hasItemTemplate(item, 1, false) && !player.hasItemTemplate(item2, 1, false))
+diff --git a/src/org/starloco/locos/panel/ChatVivo.java b/src/org/starloco/locos/panel/ChatVivo.java
+new file mode 100644
+index 0000000..0ed5486
+--- /dev/null
++++ b/src/org/starloco/locos/panel/ChatVivo.java
+@@ -0,0 +1,1368 @@
++package org.starloco.locos.panel;
++
++import org.starloco.locos.area.SubArea;
++import org.starloco.locos.area.map.GameMap;
++import org.starloco.locos.client.Player;
++import org.starloco.locos.common.Formulas;
++import org.starloco.locos.common.SocketManager;
++import org.starloco.locos.entity.monster.Monster;
++import org.starloco.locos.entity.monster.MonsterGrade;
++import org.starloco.locos.entity.monster.MonsterGroup;
++import org.starloco.locos.fight.Fight;
++import org.starloco.locos.fight.Fighter;
++import org.starloco.locos.game.scheduler.Updatable;
++import org.starloco.locos.game.world.World;
++import org.starloco.locos.job.JobAction;
++import org.starloco.locos.kernel.Config;
++import org.starloco.locos.kernel.Constant;
++import org.starloco.locos.kernel.Main;
++import org.starloco.locos.object.GameObject;
++import org.starloco.locos.object.ObjectTemplate;
++
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.nio.file.Paths;
++import java.util.*;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ThreadLocalRandom;
++
++/**
++ * Mundo LabTech: o chat vivo. O jogo conversa com o jogador conforme o que ele est\u00e1 fazendo, o n\u00edvel e o lugar, usando
++ * os canais do pr\u00f3prio chat (cada um liga e desliga nas caixinhas):
++ * <ul>
++ *   <li>Dicas (canal de recrutamento, "?"): NPCs e celebridades d\u00e3o dicas do personagem, curiosidades, segredos;</li>
++ *   <li>Itens (canal de com\u00e9rcio, ":"): builds, conjuntos, chance de drop (dita pelo pr\u00f3prio monstro) e forjamagia;</li>
++ *   <li>Chefes (canal de Incarnam, "^"): fichas dos chefes, procurados, monstros raros, calabou\u00e7os e eventos;</li>
++ *   <li>Informa\u00e7\u00f5es (verde): o lugar onde o jogador acabou de entrar.</li>
++ * </ul>
++ * Os textos e os dados do jogo j\u00e1 mastigados v\u00eam de scripts/labtech/chat_vivo.tsv (panel/tools/labtech/chatvivo.py),
++ * relido quando muda. O mundo \u00e9 varrido de minuto em minuto para saber onde est\u00e3o os monstros agora.
++ */
++public class ChatVivo extends Updatable<Void> {
++
++    public static final ChatVivo instance = new ChatVivo(3000);
++
++    private static final Path ARQUIVO = Paths.get("scripts", "labtech", "chat_vivo.tsv");
++    private static final Path PROGRESSO = Paths.get("labtech_calaboucos.tsv");
++    private static final String DICAS = "?", ITENS = ":", CHEFES = "^";
++    private static final Set<Integer> TIPOS_BONS = new HashSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 23, 81, 82, 113));
++    private static final int[] POS_EQUIP = {6, 7, 0, 2, 4, 3, 5};
++    private static final String[] NOME_POS = {"amuleto", "arma", "anel", "cinto", "anel", "botas", "chap\u00e9u", "capa"};
++    private static final String[] ELEMENTOS = {"forca", "inteligencia", "agilidade", "sorte"};
++    private static final String[] NOME_ELEMENTO = {"For\u00e7a", "Intelig\u00eancia", "Agilidade", "Sorte"};
++    private static final int[] STAT_ELEMENTO = {Constant.STATS_ADD_FORC, Constant.STATS_ADD_INTE, Constant.STATS_ADD_AGIL, Constant.STATS_ADD_CHAN};
++    private static final int RUNA_PA = 1557, RUNA_PM = 1558, GELANO = 2469;
++    private static final String[] RODA = {"dica", "build", "oportunidade", "chefe", "curiosidade", "dica", "fm", "missao",
++            "conjunto", "oportunidade", "segredo", "dica", "raro", "local", "procurado"};
++
++    // ------------------------------------------------------------------ dados do TSV
++    private static class Frase {
++        final String quem, texto;
++
++        Frase(String quem, String texto) {
++            this.quem = quem;
++            this.texto = texto;
++        }
++    }
++
++    private static class Conjunto {
++        int nivel;
++        int[] notas, ids;
++        String nome, resumo;
++    }
++
++    private static class Zona {
++        int min, max;
++        String nome, mobs;
++    }
++
++    private static class Chefe {
++        int id, min, max;
++        String ficha, dica;
++    }
++
++    private static class Local {
++        int mapa;
++        String nome, xy, nota;
++    }
++
++    private static class Calabouco {
++        String chave, nome;
++        int chefe, min, max, primeira;
++        Set<Integer> salas = new HashSet<>();
++    }
++
++    private final Map<String, List<Frase>> dicas = new HashMap<>(), modelos = new HashMap<>(), eventosTxt = new HashMap<>();
++    private final List<int[]> dicasNivelFaixa = new ArrayList<>();
++    private final List<Frase> dicasNivel = new ArrayList<>(), curiosidades = new ArrayList<>(), segredos = new ArrayList<>(), boasVindas = new ArrayList<>();
++    private final Map<String, int[][]> builds = new HashMap<>();
++    private final List<Conjunto> conjuntos = new ArrayList<>();
++    private final Map<Integer, Zona> zonas = new HashMap<>();
++    private final Map<Integer, Chefe> chefes = new HashMap<>();
++    private final Map<Integer, String> nomeMob = new HashMap<>(), nomeSa = new HashMap<>();
++    private final Map<Integer, int[]> mobZonas = new HashMap<>(), procurados = new HashMap<>();
++    private final Set<Integer> raros = new HashSet<>();
++    private final List<Local> locais = new ArrayList<>();
++    private final List<Calabouco> calaboucos = new ArrayList<>();
++    private String[] estatistica = {"?", "?", "?", "?"};
++    private int minSeg = 35, maxSeg = 70;
++    private long lidoEm = -1;
++
++    // ------------------------------------------------------------------ mundo e jogadores
++    private static class Spot {
++        int mapa, grupo, qtd, sa, x, y, nivel;
++    }
++
++    private volatile Map<Integer, List<Spot>> vivos = new HashMap<>();
++    private final Set<String> anunciados = ConcurrentHashMap.newKeySet();
++    private long ultimaVarredura, proximoEvento;
++    private boolean primeiraVarredura = true;
++
++    private static class Estado {
++        long proxima, entrouEm, ultimaZonaMsg;
++        int rodada, ultimaSa = -2, ultimoMapa = -1;
++        boolean desligado, saudado;
++        final Deque<String> recentes = new ArrayDeque<>();
++        final Map<String, Long> regras = new HashMap<>();
++    }
++
++    private final Map<Integer, Estado> estados = new ConcurrentHashMap<>();
++
++    private static class Evento {
++        String tipo, zona;
++        int mapa, grupo = Integer.MIN_VALUE, sa, x, y;
++        long fim;
++    }
++
++    private volatile Evento evento;
++    private final Map<Integer, Set<String>> progresso = new ConcurrentHashMap<>();
++    private boolean progressoLido;
++    private final Map<Integer, int[]> cacheFm = new ConcurrentHashMap<>();
++
++    public ChatVivo(int wait) {
++        super(wait);
++    }
++
++    // ================================================================== ciclo principal
++    @Override
++    public void update() {
++        if (!this.verify()) return;
++        carregar();
++        if (modelos.isEmpty()) return;
++        long agora = System.currentTimeMillis();
++        if (agora - ultimaVarredura > 60_000) {
++            ultimaVarredura = agora;
++            varrer();
++        }
++        eventoTick(agora);
++        for (Player p : new ArrayList<>(World.world.getOnlinePlayers())) {
++            if (p == null || !p.isOnline()) continue;
++            Estado e = estado(p);
++            if (e.desligado) continue;
++            try {
++                if (!e.saudado && agora - e.entrouEm > 12_000) {
++                    e.saudado = true;
++                    Frase f = sorteia(boasVindas, e);
++                    if (f != null) falar(p, DICAS, f.quem, preencher(f.texto, vars(p)), null);
++                }
++                if (p.getFight() == null && agora - e.entrouEm > 15_000) zonaTick(p, e, agora);
++                if (agora >= e.proxima) {
++                    agendar(e, agora);
++                    if (p.getFight() == null) proximaMensagem(p, e);
++                }
++            } catch (Exception ex) {
++                Main.logger.error("Chat vivo: erro com " + p.getName(), ex);
++            }
++        }
++    }
++
++    private void agendar(Estado e, long agora) {
++        e.proxima = agora + 1000L * (minSeg + ThreadLocalRandom.current().nextInt(Math.max(1, maxSeg - minSeg + 1)));
++    }
++
++    private Estado estado(Player p) {
++        return estados.computeIfAbsent(p.getId(), k -> {
++            Estado e = new Estado();
++            e.entrouEm = System.currentTimeMillis();
++            e.proxima = e.entrouEm + 25_000;
++            return e;
++        });
++    }
++
++    private void proximaMensagem(Player p, Estado e) {
++        for (int i = 0; i < RODA.length; i++) {
++            String cat = RODA[e.rodada++ % RODA.length];
++            if (categoria(p, e, cat)) return;
++        }
++    }
++
++    private boolean categoria(Player p, Estado e, String cat) {
++        switch (cat) {
++            case "dica": return dica(p, e);
++            case "build": return build(p, e);
++            case "conjunto": return conjunto(p, e);
++            case "oportunidade": return oportunidade(p, e);
++            case "chefe": return chefe(p, e, null);
++            case "curiosidade": return frase(p, e, curiosidades, DICAS);
++            case "segredo": return frase(p, e, segredos, DICAS);
++            case "fm": return fm(p, e, null);
++            case "missao": return missao(p, e);
++            case "raro": return raro(p, e);
++            case "local": return local(p, e);
++            case "procurado": return procurado(p, e);
++            default: return false;
++        }
++    }
++
++    // ================================================================== eventos do jogo (chamados pelo servidor)
++    public static void onLogin(Player p) {
++        Estado e = new Estado();
++        e.entrouEm = System.currentTimeMillis();
++        e.proxima = e.entrouEm + 25_000;
++        Estado antigo = instance.estados.get(p.getId());
++        if (antigo != null) e.desligado = antigo.desligado;
++        instance.estados.put(p.getId(), e);
++        if (instance.evento == null) instance.proximoEvento = Math.min(instance.proximoEvento, e.entrouEm + 20_000);
++    }
++
++    public static void onLevelUp(Player p) {
++        Estado e = instance.estados.get(p.getId());
++        if (e == null || e.desligado) return;
++        e.proxima = Math.max(e.proxima, System.currentTimeMillis() + 5_000);
++        try {
++            instance.build(p, e);
++        } catch (Exception ignored) {
++        }
++    }
++
++    public static void onFightStart(Fight fight) {
++        try {
++            MonsterGrade chefe = null;
++            for (Fighter f : fight.getFighters(3)) {
++                MonsterGrade m = f.getMob();
++                if (m != null && !f.isInvocation() && instance.chefes.containsKey(m.getTemplate().getId())) chefe = m;
++            }
++            if (chefe == null) return;
++            for (Player p : jogadores(fight)) {
++                Estado e = instance.estados.get(p.getId());
++                if (e == null || e.desligado) continue;
++                instance.chefe(p, e, chefe.getTemplate().getId());
++            }
++        } catch (Exception ex) {
++            Main.logger.error("Chat vivo: inicio de luta", ex);
++        }
++    }
++
++    public static void onFightEnd(Fight fight, Collection<Fighter> vencedores) {
++        try {
++            Set<Integer> ganhou = new HashSet<>();
++            for (Fighter f : vencedores)
++                if (f != null && f.getPlayer() != null) ganhou.add(f.getPlayer().getId());
++            Set<Integer> mobs = new HashSet<>();
++            for (Fighter f : fight.getFighters(3))
++                if (f.getMob() != null) mobs.add(f.getMob().getTemplate().getId());
++            int mapa = fight.getMapOld() != null ? fight.getMapOld().getId() : -1;
++            Evento ev = instance.evento;
++            boolean doEvento = ev != null && ev.grupo != Integer.MIN_VALUE && mapa == ev.mapa && fight.getMobGroup() != null
++                    && fight.getMobGroup().getId() == ev.grupo;
++            for (Player p : jogadores(fight)) {
++                if (!ganhou.contains(p.getId())) continue;
++                instance.calaboucoVencido(p, mapa, mobs);
++                if (doEvento) {
++                    Map<String, String> v = instance.vars(p);
++                    v.put("zona", ev.zona);
++                    instance.anunciarTodos(CHEFES, instance.eventosTxt.get("vencido"), v, null);
++                    instance.encerrarEvento(false);
++                }
++            }
++        } catch (Exception ex) {
++            Main.logger.error("Chat vivo: fim de luta", ex);
++        }
++    }
++
++    /** Drop em dobro nas lutas do evento (grupo invasor, chefe errante ou chuva de drop numa sub\u00e1rea). */
++    public static double multiplicadorDrop(Fight fight) {
++        Evento ev = instance.evento;
++        if (ev == null || fight == null || fight.getMapOld() == null) return 1.0;
++        if ("chuva".equals(ev.tipo)) {
++            SubArea sa = fight.getMapOld().getSubArea();
++            return sa != null && sa.getId() == ev.sa ? 2.0 : 1.0;
++        }
++        return fight.getMapOld().getId() == ev.mapa && fight.getMobGroup() != null && fight.getMobGroup().getId() == ev.grupo ? 2.0 : 1.0;
++    }
++
++    /** 2.0 quando o grupo \u00e9 o do evento em andamento (os figurantes deixam esse para os jogadores). */
++    public static double multiplicadorDropGrupo(GameMap map, MonsterGroup g) {
++        Evento ev = instance.evento;
++        return ev != null && map != null && g != null && map.getId() == ev.mapa && g.getId() == ev.grupo ? 2.0 : 1.0;
++    }
++
++    /** Quem desligou o chat vivo tamb\u00e9m n\u00e3o recebe os an\u00fancios dos figurantes. */
++    public static boolean chatDesligado(Player p) {
++        Estado e = instance.estados.get(p.getId());
++        return e != null && e.desligado;
++    }
++
++    // ================================================================== comandos do chat
++    /** Comandos do chat vivo. @return true se o comando era dele. */
++    public static boolean comando(Player p, String msg) {
++        if (msg == null || msg.length() < 2 || msg.charAt(0) != '.') return false;
++        String[] partes = msg.substring(1).trim().split("\\s+", 2);
++        String cmd = partes[0].toLowerCase(), arg = partes.length > 1 ? partes[1].trim() : "";
++        ChatVivo cv = instance;
++        cv.carregar();
++        Estado e = cv.estado(p);
++        switch (cmd) {
++            case "dica": if (!cv.dica(p, e)) cv.frase(p, e, cv.dicas.get("geral"), DICAS); return true;
++            case "build": cv.build(p, e); return true;
++            case "conjunto": cv.conjunto(p, e); return true;
++            case "drop": if (!cv.oportunidade(p, e)) p.sendMessage("Nenhum monstro com drop interessante perto do seu n\u00edvel agora."); return true;
++            case "fm": cv.fm(p, e, arg); return true;
++            case "chefe": cv.chefe(p, e, null); return true;
++            case "procurado": case "procurados": cv.procurado(p, e); return true;
++            case "raro": case "raros": if (!cv.raro(p, e)) p.sendMessage("Nenhum monstro raro no mundo agora. Fique de olho."); return true;
++            case "segredo": case "segredos": cv.local(p, e); return true;
++            case "curiosidade": cv.frase(p, e, cv.curiosidades, DICAS); return true;
++            case "calaboucos": case "calabou\u00e7os": case "rota": cv.rota(p); return true;
++            case "evento": cv.eventoInfo(p); return true;
++            case "ir": cv.ir(p, arg, e); return true;
++            case "chatvivo":
++                if (arg.startsWith("desl") || arg.startsWith("off")) {
++                    e.desligado = true;
++                    p.sendMessage("Chat vivo desligado. Use .chatvivo liga para voltar.");
++                } else {
++                    e.desligado = false;
++                    e.saudado = false;
++                    e.entrouEm = System.currentTimeMillis() - 11_000;
++                    p.sendMessage("Chat vivo ligado.");
++                }
++                return true;
++            default: return false;
++        }
++    }
++
++    private void ir(Player p, String arg, Estado e) {
++        if (p.getGroup() == null) {
++            p.sendMessage("S\u00f3 GMs podem usar .ir.");
++            return;
++        }
++        if (p.getFight() != null) {
++            p.sendMessage("Termine a luta antes.");
++            return;
++        }
++        int mapa = e.ultimoMapa;
++        if (!arg.isEmpty()) {
++            try {
++                mapa = Integer.parseInt(arg.replaceAll("[^0-9]", ""));
++            } catch (NumberFormatException ex) {
++                mapa = -1;
++            }
++        }
++        GameMap map = mapa > 0 ? World.world.getMap(mapa) : null;
++        if (map == null) {
++            p.sendMessage(mapa > 0 ? "Esse mapa n\u00e3o existe neste servidor." : "Digite .ir seguido do n\u00famero do mapa.");
++            return;
++        }
++        int cell = map.getRandomFreeCellId();
++        if (cell <= 0 || map.getCase(cell) == null) {
++            p.sendMessage("N\u00e3o achei uma casa livre nesse mapa.");
++            return;
++        }
++        p.teleport(mapa, cell);
++    }
++
++    // ================================================================== dicas
++    private boolean dica(Player p, Estado e) {
++        long agora = System.currentTimeMillis();
++        Map<String, String> v = vars(p);
++        List<String> ativas = new ArrayList<>();
++        List<Integer> itemDaRegra = new ArrayList<>();
++        if (p.getCapital() > 0) ativas.add("capital");
++        if (p.get_spellPts() > 0 && p.getClasse() != Constant.CLASS_LABTECH) ativas.add("feitico");
++        int[][] b = buildDe(p);
++        for (int pos : POS_EQUIP) {
++            GameObject o = p.getObjetByPos(pos);
++            int sugestao = b == null ? -1 : itemDoSlot(b, pos);
++            if (o == null && sugestao > 0 && podeUsarRegra(e, "slot" + pos, agora)) {
++                ativas.add("slot");
++                v.put("slot", NOME_POS[pos]);
++                itemDaRegra.add(sugestao);
++                break;
++            }
++            if (o != null && sugestao > 0 && o.getTemplate().getLevel() < p.getLevel() - 30
++                    && World.world.getObjTemplate(sugestao).getLevel() > o.getTemplate().getLevel() + 15 && podeUsarRegra(e, "upg" + pos, agora)) {
++                ativas.add("upgrade");
++                v.put("slot", NOME_POS[pos]);
++                v.put("nivel_item", String.valueOf(o.getTemplate().getLevel()));
++                itemDaRegra.add(sugestao);
++                break;
++            }
++        }
++        if (p.getMetiers().isEmpty()) ativas.add("profissao");
++        if (p.getAlignment() == Constant.ALIGNEMENT_NEUTRE && p.getLevel() >= 10) ativas.add("alinhamento");
++        if (p.getLevel() >= 60 && p.getMount() == null) ativas.add("montaria");
++        if (p.getLevel() >= 95 && p.getLevel() < 100) ativas.add("nivel100");
++        if (p.getMaxPdv() > 0 && p.getCurPdv() * 100 / p.getMaxPdv() < 50) ativas.add("vida");
++        if (p.getEnergy() < 3000) ativas.add("energia");
++        ativas.removeIf(r -> !r.equals("slot") && !r.equals("upgrade") && !podeUsarRegra(e, r, agora));
++        String regra;
++        if (!ativas.isEmpty()) {
++            regra = ativas.get(ThreadLocalRandom.current().nextInt(ativas.size()));
++        } else {
++            String[] extras = {"onde_upar", "chefe_nivel", "rates", "geral", "geral", "nivel"};
++            regra = extras[ThreadLocalRandom.current().nextInt(extras.length)];
++            if (!podeUsarRegra(e, regra, agora) && !regra.equals("geral")) regra = "geral";
++        }
++        e.regras.put(regra, agora);
++        if (regra.startsWith("slot") || regra.equals("upgrade")) e.regras.put(regra.equals("slot") ? "slot" : "upgrade", agora);
++        switch (regra) {
++            case "onde_upar": {
++                Zona z = zonaPara(p.getLevel());
++                if (z == null) return frase(p, e, dicas.get("geral"), DICAS);
++                int sa = zonaId(z);
++                v.put("zona", z.nome);
++                v.put("faixa", z.min + "\u2013" + z.max);
++                v.put("mobs", z.mobs);
++                Spot s = spotNaZona(sa);
++                v.put("mapa", s != null ? String.valueOf(s.mapa) : "");
++                if (s != null) e.ultimoMapa = s.mapa;
++                break;
++            }
++            case "chefe_nivel": {
++                List<String> nomes = new ArrayList<>();
++                for (Chefe c : chefes.values())
++                    if (c.min <= p.getLevel() + 15 && c.max >= p.getLevel() - 20) nomes.add(nomeMob(c.id) + " (" + c.min + ")");
++                if (nomes.isEmpty()) return frase(p, e, dicas.get("geral"), DICAS);
++                Collections.shuffle(nomes);
++                v.put("chefes", String.join(", ", nomes.subList(0, Math.min(5, nomes.size()))));
++                break;
++            }
++            case "nivel": {
++                List<Frase> l = new ArrayList<>();
++                for (int i = 0; i < dicasNivel.size(); i++) {
++                    int[] f = dicasNivelFaixa.get(i);
++                    if (p.getLevel() >= f[0] && p.getLevel() < f[1]) l.add(dicasNivel.get(i));
++                }
++                return frase(p, e, l, DICAS);
++            }
++            default:
++        }
++        List<Frase> lista = dicas.get(regra);
++        Frase f = sorteia(lista, e);
++        if (f == null) return false;
++        String texto = preencher(f.texto, v);
++        falar(p, DICAS, preencher(f.quem, v), texto, itemDaRegra);
++        return true;
++    }
++
++    private boolean podeUsarRegra(Estado e, String regra, long agora) {
++        Long t = e.regras.get(regra);
++        return t == null || agora - t > 10 * 60_000;
++    }
++
++    private boolean frase(Player p, Estado e, List<Frase> lista, String canal) {
++        Frase f = sorteia(lista, e);
++        if (f == null) return false;
++        Map<String, String> v = vars(p);
++        v.put("monstros", estatistica[0]);
++        v.put("itens", estatistica[1]);
++        v.put("conjuntos", estatistica[2]);
++        v.put("chefes", estatistica[3]);
++        falar(p, canal, preencher(f.quem, v), preencher(f.texto, v), null);
++        return true;
++    }
++
++    // ================================================================== itens: build, conjunto, drop, forjamagia
++    private int elemento(Player p, Estado e) {
++        int melhor = -1, valor = 0;
++        for (int i = 0; i < 4; i++) {
++            int s = p.getStats().getEffect(STAT_ELEMENTO[i]);
++            if (s > valor) {
++                valor = s;
++                melhor = i;
++            }
++        }
++        if (melhor >= 0) return melhor;
++        switch (p.getClasse()) {
++            case Constant.CLASS_CRA: return 2;
++            case Constant.CLASS_ENUTROF: case Constant.CLASS_ECAFLIP: return 3;
++            case Constant.CLASS_FECA: case Constant.CLASS_OSAMODAS: case Constant.CLASS_ENIRIPSA: case Constant.CLASS_XELOR: return 1;
++            case Constant.CLASS_LABTECH: return e.rodada % 4;
++            default: return 0;
++        }
++    }
++
++    private int nivelBuild(int nivel) {
++        int n = nivel >= 10 ? (nivel / 10) * 10 : 1;
++        return Math.min(200, n);
++    }
++
++    private int[][] buildDe(Player p) {
++        Estado e = estado(p);
++        return builds.get(nivelBuild(p.getLevel()) + ":" + ELEMENTOS[elemento(p, e)]);
++    }
++
++    private int itemDoSlot(int[][] b, int pos) {
++        for (int[] par : b)
++            if (par[0] == pos) return par[1];
++        return -1;
++    }
++
++    private boolean build(Player p, Estado e) {
++        int el = elemento(p, e);
++        int nb = nivelBuild(p.getLevel());
++        int[][] b = builds.get(nb + ":" + ELEMENTOS[el]);
++        if (b == null) return false;
++        List<Integer> ids = new ArrayList<>();
++        for (int[] par : b) ids.add(par[1]);
++        Map<String, String> v = vars(p);
++        v.put("elemento", NOME_ELEMENTO[el]);
++        v.put("nivel_build", String.valueOf(nb));
++        v.put("itens", marcadores(0, ids.size()));
++        return modelo(p, e, ITENS, "build", v, ids);
++    }
++
++    private boolean conjunto(Player p, Estado e) {
++        int el = elemento(p, e);
++        List<Conjunto> bons = new ArrayList<>();
++        for (Conjunto c : conjuntos)
++            if (c.nivel <= p.getLevel() && c.nivel >= p.getLevel() - 35) bons.add(c);
++        if (bons.isEmpty()) return false;
++        bons.sort((a, b) -> b.notas[el] - a.notas[el]);
++        Conjunto c = bons.get(ThreadLocalRandom.current().nextInt(Math.min(3, bons.size())));
++        List<Integer> ids = new ArrayList<>();
++        for (int id : c.ids) ids.add(id);
++        Map<String, String> v = vars(p);
++        v.put("conjunto", c.nome);
++        v.put("nivel_item", String.valueOf(c.nivel));
++        v.put("resumo", c.resumo.isEmpty() ? "b\u00f4nus de conjunto" : c.resumo);
++        v.put("itens", marcadores(0, ids.size()));
++        return modelo(p, e, ITENS, "conjunto", v, ids);
++    }
++
++    private static class Achado {
++        int mob, item, qtd, mapa, sa, x, y;
++        double chance;
++    }
++
++    /** Monstros vivos agora com drop interessante perto do n\u00edvel do jogador (ou Dofus), contados por sub\u00e1rea. */
++    private Achado achado(Player p, int saFiltro) {
++        int prosp = prospeccao(p);
++        List<Achado> lista = new ArrayList<>();
++        for (Map.Entry<Integer, List<Spot>> en : vivos.entrySet()) {
++            Monster m = World.world.getMonstre(en.getKey());
++            if (m == null || m.getDrops() == null) continue;
++            Map<Integer, int[]> porSa = new HashMap<>();   // sa -> {qtd, mapa, x, y, melhorQtd, nivel}
++            for (Spot s : en.getValue()) {
++                if (saFiltro >= 0 && s.sa != saFiltro) continue;
++                int[] t = porSa.computeIfAbsent(s.sa, k -> new int[]{0, s.mapa, s.x, s.y, 0, s.nivel});
++                t[0] += s.qtd;
++                if (s.qtd > t[4]) {
++                    t[1] = s.mapa;
++                    t[2] = s.x;
++                    t[3] = s.y;
++                    t[4] = s.qtd;
++                }
++            }
++            if (porSa.isEmpty()) continue;
++            for (World.Drop d : m.getDrops()) {
++                ObjectTemplate t = World.world.getObjTemplate(d.getObjectId());
++                if (t == null || d.getAction() != -1 || (d.getCondition() != null && !d.getCondition().isEmpty())) continue;
++                if (!TIPOS_BONS.contains(t.getType()) && t.getPanoId() <= 0) continue;
++                boolean dofus = t.getType() == Constant.ITEM_TYPE_DOFUS;
++                for (Map.Entry<Integer, int[]> z : porSa.entrySet()) {
++                    int[] info = z.getValue();
++                    if (!dofus && Math.abs(info[5] - p.getLevel()) > 40 && saFiltro < 0) continue;
++                    if (!dofus && Math.abs(t.getLevel() - p.getLevel()) > 45 && saFiltro < 0) continue;
++                    Achado a = new Achado();
++                    a.mob = en.getKey();
++                    a.item = t.getId();
++                    a.qtd = info[0];
++                    a.mapa = info[1];
++                    a.x = info[2];
++                    a.y = info[3];
++                    a.sa = z.getKey();
++                    a.chance = chance(maxPercent(d), prosp);
++                    if (a.chance >= 0.01) lista.add(a);
++                }
++            }
++        }
++        if (lista.isEmpty()) return null;
++        lista.sort((a, b) -> Integer.compare(b.qtd, a.qtd));
++        return lista.get(ThreadLocalRandom.current().nextInt(Math.min(12, lista.size())));
++    }
++
++    private boolean oportunidade(Player p, Estado e) {
++        Achado a = achado(p, -1);
++        if (a == null) return false;
++        ObjectTemplate t = World.world.getObjTemplate(a.item);
++        Map<String, String> v = vars(p);
++        v.put("mob", nomeMob(a.mob));
++        v.put("qtd", String.valueOf(a.qtd));
++        v.put("zona", nomeSa(a.sa));
++        v.put("x", String.valueOf(a.x));
++        v.put("y", String.valueOf(a.y));
++        v.put("item", "\u00b00");
++        v.put("chance", fmt(a.chance));
++        v.put("mapa", String.valueOf(a.mapa));
++        e.ultimoMapa = a.mapa;
++        return modelo(p, e, ITENS, t.getType() == Constant.ITEM_TYPE_DOFUS ? "drop_dofus" : "drop_aqui", v, Collections.singletonList(a.item));
++    }
++
++    private boolean fm(Player p, Estado e, String arg) {
++        ObjectTemplate t = null;
++        if (arg != null && !arg.isEmpty()) {
++            try {
++                t = World.world.getObjTemplate(Integer.parseInt(arg.replaceAll("[^0-9]", "")));
++            } catch (NumberFormatException ignored) {
++            }
++        }
++        if (t == null) {
++            List<ObjectTemplate> meus = new ArrayList<>();
++            for (int pos : POS_EQUIP) {
++                GameObject o = p.getObjetByPos(pos);
++                if (o != null && o.getTemplate() != null && JobAction.getStatBaseMaxs(o.getTemplate(), "6f") <= 0) meus.add(o.getTemplate());
++            }
++            t = meus.isEmpty() || ThreadLocalRandom.current().nextInt(3) == 0 ? World.world.getObjTemplate(GELANO)
++                    : meus.get(ThreadLocalRandom.current().nextInt(meus.size()));
++        }
++        if (t == null) return false;
++        int[] pa = chanceFm(t, "6f", 100), pm = chanceFm(t, "80", 90);
++        if (pa == null || pm == null) return false;
++        Map<String, String> v = vars(p);
++        v.put("item", "\u00b00");
++        v.put("runa_pa", "\u00b01");
++        v.put("runa_pm", "\u00b02");
++        v.put("pa", String.valueOf(Math.min(100, pa[0] + pa[1])));
++        v.put("pa_sc", String.valueOf(pa[0]));
++        v.put("pm", String.valueOf(Math.min(100, pm[0] + pm[1])));
++        return modelo(p, e, ITENS, "fm", v, Arrays.asList(t.getId(), RUNA_PA, RUNA_PM));
++    }
++
++    /** Chance de forjamagia (sucesso cr\u00edtico, sucesso neutro) de +1 no efeito, com a mesma f\u00f3rmula do servidor. */
++    private int[] chanceFm(ObjectTemplate t, String stat, int peso) {
++        int chave = t.getId() * 1000 + Integer.parseInt(stat, 16);
++        int[] cache = cacheFm.get(chave);
++        if (cache != null) return cache;
++        try {
++            GameObject obj = t.createNewItem(1, false);
++            String s = obj.encodeStats();
++            int pesoTotal = s.isEmpty() ? 1 : JobAction.currentTotalWeigthBase(s, obj);
++            int pesoStat = s.isEmpty() ? 1 : JobAction.currentWeithStats(obj, stat);
++            int base = Math.max(0, JobAction.WeithTotalBase(t.getId())), baseMin = JobAction.WeithTotalBaseMin(t.getId());
++            int max = JobAction.getStatBaseMaxs(t, stat), min = JobAction.getStatBaseMins(t, stat), atual = JobAction.currentStats(obj, stat);
++            float coef = max > 0 ? 1.0f : JobAction.coefExo;
++            int diff = (int) Math.abs(base * 1.3f - Math.max(0, pesoTotal));
++            ArrayList<Integer> c = Formulas.chanceFM(base, baseMin, Math.max(1, pesoTotal), Math.max(0, pesoStat), peso, diff, coef, max, min, atual, 1f, false, 1);
++            int[] r = {c.get(0), c.get(1)};
++            cacheFm.put(chave, r);
++            return r;
++        } catch (Exception ex) {
++            return null;
++        }
++    }
++
++    // ================================================================== chefes, raros, procurados, segredos, calabou\u00e7os
++    private boolean chefe(Player p, Estado e, Integer forcado) {
++        Chefe c = forcado != null ? chefes.get(forcado) : null;
++        if (c == null) {
++            List<Chefe> bons = new ArrayList<>();
++            for (Chefe x : chefes.values())
++                if (x.min <= p.getLevel() + 15 && x.max >= p.getLevel() - 25) bons.add(x);
++            if (bons.isEmpty()) bons.addAll(chefes.values());
++            bons.removeIf(x -> e.recentes.contains("chefe" + x.id));
++            if (bons.isEmpty()) return false;
++            c = bons.get(ThreadLocalRandom.current().nextInt(bons.size()));
++        }
++        lembrar(e, "chefe" + c.id);
++        Map<String, String> v = vars(p);
++        v.put("mob", nomeMob(c.id));
++        v.put("ficha", c.ficha);
++        v.put("dica", c.dica);
++        modelo(p, e, CHEFES, "chefe_ficha", v, null);
++        modelo(p, e, CHEFES, "chefe_dica", v, null);
++        // drops raros com a chance do jogador
++        Monster m = World.world.getMonstre(c.id);
++        if (m != null && m.getDrops() != null) {
++            int prosp = prospeccao(p);
++            List<Object[]> ds = new ArrayList<>();
++            for (World.Drop d : m.getDrops()) {
++                ObjectTemplate t = World.world.getObjTemplate(d.getObjectId());
++                if (t == null || d.getAction() != -1) continue;
++                if (!TIPOS_BONS.contains(t.getType()) && t.getPanoId() <= 0 && maxPercent(d) > 5) continue;
++                double ch = chance(maxPercent(d), prosp);
++                if (ch >= 0.01) ds.add(new Object[]{t.getId(), ch});
++            }
++            ds.sort((a, b) -> Double.compare((Double) a[1], (Double) b[1]));
++            if (!ds.isEmpty()) {
++                List<Integer> ids = new ArrayList<>();
++                StringBuilder txt = new StringBuilder();
++                for (Object[] d : ds.subList(0, Math.min(4, ds.size()))) {
++                    if (txt.length() > 0) txt.append(", ");
++                    txt.append("\u00b0").append(ids.size()).append(" (").append(fmt((Double) d[1])).append("%)");
++                    ids.add((Integer) d[0]);
++                }
++                v.put("drops", txt.toString());
++                modelo(p, e, CHEFES, "chefe_drop", v, ids);
++            }
++        }
++        Spot s = primeiroVivo(c.id);
++        if (s != null) {
++            v.put("zona", nomeSa(s.sa));
++            v.put("x", String.valueOf(s.x));
++            v.put("y", String.valueOf(s.y));
++            v.put("mapa", String.valueOf(s.mapa));
++            e.ultimoMapa = s.mapa;
++            modelo(p, e, CHEFES, "chefe_onde", v, null);
++        }
++        return true;
++    }
++
++    private boolean raro(Player p, Estado e) {
++        List<Spot> achados = new ArrayList<>();
++        List<Integer> mobs = new ArrayList<>();
++        for (int id : raros) {
++            List<Spot> l = vivos.get(id);
++            if (l != null)
++                for (Spot s : l) {
++                    achados.add(s);
++                    mobs.add(id);
++                }
++        }
++        if (achados.isEmpty()) return false;
++        int i = ThreadLocalRandom.current().nextInt(achados.size());
++        return anunciarRaro(p, e, mobs.get(i), achados.get(i), "raro");
++    }
++
++    private boolean anunciarRaro(Player p, Estado e, int mob, Spot s, String tipo) {
++        Map<String, String> v = vars(p);
++        v.put("mob", nomeMob(mob));
++        v.put("zona", nomeSa(s.sa));
++        v.put("x", String.valueOf(s.x));
++        v.put("y", String.valueOf(s.y));
++        v.put("nivel_mob", String.valueOf(s.nivel));
++        v.put("mapa", String.valueOf(s.mapa));
++        v.put("onde", "Visto agora em " + nomeSa(s.sa) + " [" + s.x + "," + s.y + "].");
++        e.ultimoMapa = s.mapa;
++        return modelo(p, e, CHEFES, tipo, v, null);
++    }
++
++    private boolean procurado(Player p, Estado e) {
++        if (procurados.isEmpty()) return false;
++        List<Integer> ids = new ArrayList<>(procurados.keySet());
++        Collections.shuffle(ids);
++        for (int id : ids) {
++            Spot s = primeiroVivo(id);
++            if (s != null) return anunciarRaro(p, e, id, s, "procurado");
++        }
++        int id = ids.get(0);
++        Monster m = World.world.getMonstre(id);
++        Map<String, String> v = vars(p);
++        v.put("mob", nomeMob(id));
++        v.put("nivel_mob", m == null ? "?" : faixaMonstro(m));
++        List<String> nomes = new ArrayList<>();
++        for (int sa : procurados.get(id))
++            if (nomeSa.containsKey(sa)) nomes.add(nomeSa(sa));
++        v.put("onde", nomes.isEmpty() ? "Paradeiro desconhecido." : "Costuma se esconder em " + String.join(", ", nomes.subList(0, Math.min(3, nomes.size()))) + ".");
++        v.put("mapa", "");
++        return modelo(p, e, CHEFES, "procurado", v, null);
++    }
++
++    private boolean local(Player p, Estado e) {
++        List<Local> l = new ArrayList<>();
++        for (Local x : locais)
++            if (World.world.getMap(x.mapa) != null && !e.recentes.contains("local" + x.mapa)) l.add(x);
++        if (l.isEmpty()) return false;
++        Local x = l.get(ThreadLocalRandom.current().nextInt(l.size()));
++        lembrar(e, "local" + x.mapa);
++        Map<String, String> v = vars(p);
++        String[] xy = x.xy.split(",");
++        v.put("local", x.nome);
++        v.put("x", xy[0]);
++        v.put("y", xy.length > 1 ? xy[1] : "?");
++        v.put("mapa", String.valueOf(x.mapa));
++        v.put("nota", x.nota);
++        e.ultimoMapa = x.mapa;
++        return modelo(p, e, DICAS, "secreto", v, null);
++    }
++
++    private boolean missao(Player p, Estado e) {
++        Calabouco c = proximoCalabouco(p);
++        if (c == null) return false;
++        Map<String, String> v = vars(p);
++        Set<String> feitos = feitos(p);
++        v.put("feitos", String.valueOf(feitos.size()));
++        v.put("total", String.valueOf(calaboucos.size()));
++        v.put("calabouco", c.nome);
++        v.put("chefe", nomeMob(c.chefe));
++        v.put("faixa", c.min + "\u2013" + c.max);
++        v.put("mapa", String.valueOf(c.primeira));
++        e.ultimoMapa = c.primeira;
++        return modelo(p, e, CHEFES, "calabouco", v, null);
++    }
++
++    private Calabouco proximoCalabouco(Player p) {
++        Set<String> feitos = feitos(p);
++        List<Calabouco> faltam = new ArrayList<>();
++        for (Calabouco c : calaboucos)
++            if (!feitos.contains(c.chave) && World.world.getMap(c.primeira) != null) faltam.add(c);
++        if (faltam.isEmpty()) return null;
++        faltam.sort(Comparator.comparingInt(c -> c.min));
++        Calabouco melhor = faltam.get(0);
++        for (Calabouco c : faltam)
++            if (c.min <= p.getLevel() + 10) melhor = c;
++        return melhor;
++    }
++
++    private void rota(Player p) {
++        Set<String> feitos = feitos(p);
++        StringBuilder sb = new StringBuilder("Rota dos Calabou\u00e7os: " + feitos.size() + " de " + calaboucos.size() + ". Faltam: ");
++        List<Calabouco> faltam = new ArrayList<>();
++        for (Calabouco c : calaboucos)
++            if (!feitos.contains(c.chave)) faltam.add(c);
++        faltam.sort(Comparator.comparingInt(c -> c.min));
++        int n = 0;
++        for (Calabouco c : faltam) {
++            if (n++ >= 6) break;
++            sb.append(n > 1 ? "; " : "").append(c.nome).append(" (nv. ").append(c.min).append(", .ir ").append(c.primeira).append(")");
++        }
++        if (faltam.isEmpty()) sb.append("nenhum. Voc\u00ea passou por todos!");
++        falar(p, CHEFES, "Juiz da Arena", sb.toString(), null);
++    }
++
++    private void calaboucoVencido(Player p, int mapa, Set<Integer> mobs) {
++        for (Calabouco c : calaboucos) {
++            if (!c.salas.contains(mapa) || !mobs.contains(c.chefe)) continue;
++            Set<String> feitos = feitos(p);
++            if (!feitos.add(c.chave)) return;
++            salvarProgresso();
++            Map<String, String> v = vars(p);
++            v.put("calabouco", c.nome);
++            v.put("feitos", String.valueOf(feitos.size()));
++            v.put("total", String.valueOf(calaboucos.size()));
++            Estado e = estado(p);
++            modelo(p, e, CHEFES, "calabouco_ok", v, null);
++            if (feitos.size() >= calaboucos.size()) anunciarTodos(CHEFES, modelos.get("calabouco_fim"), v, null);
++            return;
++        }
++    }
++
++    private Set<String> feitos(Player p) {
++        lerProgresso();
++        return progresso.computeIfAbsent(p.getId(), k -> ConcurrentHashMap.newKeySet());
++    }
++
++    private synchronized void lerProgresso() {
++        if (progressoLido) return;
++        progressoLido = true;
++        try {
++            if (!Files.exists(PROGRESSO)) return;
++            for (String linha : Files.readAllLines(PROGRESSO, StandardCharsets.UTF_8)) {
++                String[] c = linha.split("\t");
++                if (c.length < 2) continue;
++                Set<String> s = ConcurrentHashMap.newKeySet();
++                s.addAll(Arrays.asList(c[1].split(",")));
++                progresso.put(Integer.parseInt(c[0]), s);
++            }
++        } catch (Exception ex) {
++            Main.logger.error("Chat vivo: progresso dos calabou\u00e7os", ex);
++        }
++    }
++
++    private synchronized void salvarProgresso() {
++        try {
++            List<String> linhas = new ArrayList<>();
++            for (Map.Entry<Integer, Set<String>> en : progresso.entrySet())
++                linhas.add(en.getKey() + "\t" + String.join(",", en.getValue()));
++            Files.write(PROGRESSO, linhas, StandardCharsets.UTF_8);
++        } catch (Exception ex) {
++            Main.logger.error("Chat vivo: salvar progresso", ex);
++        }
++    }
++
++    // ================================================================== lugar onde o jogador entrou
++    private void zonaTick(Player p, Estado e, long agora) {
++        GameMap map = p.getCurMap();
++        if (map == null || map.getSubArea() == null) return;
++        int sa = map.getSubArea().getId();
++        if (sa == e.ultimaSa) return;
++        e.ultimaSa = sa;
++        if (agora - e.ultimaZonaMsg < 20_000) return;
++        Zona z = zonas.get(sa);
++        if (z == null) return;
++        e.ultimaZonaMsg = agora;
++        Map<String, String> v = vars(p);
++        v.put("zona", z.nome);
++        v.put("mobs", z.mobs);
++        Frase f = sorteia(modelos.get("zona"), e);
++        if (f != null) SocketManager.send(p, "cs" + limpar(preencher(f.texto, v)));
++        Achado a = achado(p, sa);
++        if (a != null) {
++            v.put("mob", nomeMob(a.mob));
++            v.put("item", "\u00b00");
++            v.put("chance", fmt(a.chance));
++            modelo(p, e, ITENS, "zona_drop", v, Collections.singletonList(a.item));
++        }
++    }
++
++    // ================================================================== eventos do mundo
++    private void eventoTick(long agora) {
++        Evento ev = evento;
++        if (ev != null && agora > ev.fim) encerrarEvento(true);
++        if (evento == null && proximoEvento > 0 && agora > proximoEvento) {
++            List<Player> on = new ArrayList<>(World.world.getOnlinePlayers());
++            on.removeIf(x -> x == null || !x.isOnline());
++            if (!on.isEmpty()) iniciarEvento(on.get(ThreadLocalRandom.current().nextInt(on.size())));
++            proximoEvento = agora + 30 * 60_000L;
++        }
++    }
++
++    private void iniciarEvento(Player ref) {
++        int nivel = ref.getLevel();
++        List<Integer> sas = new ArrayList<>();
++        for (Map.Entry<Integer, Zona> z : zonas.entrySet())
++            if (z.getValue().min <= nivel + 10 && z.getValue().max >= nivel - 15 && spotNaZona(z.getKey()) != null) sas.add(z.getKey());
++        if (sas.isEmpty()) return;
++        int sa = sas.get(ThreadLocalRandom.current().nextInt(sas.size()));
++        Spot s = spotNaZona(sa);
++        GameMap map = World.world.getMap(s.mapa);
++        if (map == null) return;
++        String[] tipos = {"invasao", "chefe", "chuva"};
++        String tipo = tipos[ThreadLocalRandom.current().nextInt(tipos.length)];
++        Zona z = zonas.get(sa);
++        Evento ev = new Evento();
++        ev.tipo = tipo;
++        ev.sa = sa;
++        ev.mapa = s.mapa;
++        ev.x = s.x;
++        ev.y = s.y;
++        ev.zona = z.nome;
++        Map<String, String> v = new HashMap<>();
++        v.put("zona", z.nome);
++        v.put("x", String.valueOf(s.x));
++        v.put("y", String.valueOf(s.y));
++        v.put("mapa", String.valueOf(s.mapa));
++        v.put("faixa", z.min + "\u2013" + z.max);
++        v.put("minutos", "20");
++        List<Integer> mobsZona = new ArrayList<>();
++        for (Map.Entry<Integer, List<Spot>> en : vivos.entrySet())
++            for (Spot x : en.getValue())
++                if (x.sa == sa && !mobsZona.contains(en.getKey())) mobsZona.add(en.getKey());
++        if (mobsZona.isEmpty()) return;
++        StringBuilder grupo = new StringBuilder();
++        if (tipo.equals("invasao")) {
++            int mob = mobsZona.get(ThreadLocalRandom.current().nextInt(mobsZona.size()));
++            for (int i = 0; i < 8; i++) grupo.append(mob).append(",1,9999;");
++            v.put("mob", nomeMob(mob));
++            v.put("qtd", "8");
++        } else if (tipo.equals("chefe")) {
++            List<Chefe> bons = new ArrayList<>();
++            for (Chefe c : chefes.values())
++                if (c.min <= nivel + 20 && c.max >= nivel - 30 && World.world.getMonstre(c.id) != null) bons.add(c);
++            if (bons.isEmpty()) {
++                tipo = "chuva";
++                ev.tipo = tipo;
++            } else {
++                Chefe c = bons.get(ThreadLocalRandom.current().nextInt(bons.size()));
++                grupo.append(c.id).append(",1,9999;");
++                for (int i = 0; i < 3; i++) grupo.append(mobsZona.get(ThreadLocalRandom.current().nextInt(mobsZona.size()))).append(",1,9999;");
++                v.put("mob", nomeMob(c.id));
++                v.put("nivel_mob", c.min + "\u2013" + c.max);
++            }
++        }
++        if (!tipo.equals("chuva")) {
++            int cell = map.getRandomFreeCellId();
++            if (cell <= 0) return;
++            MonsterGroup g = map.spawnGroupOnCommand(cell, grupo.toString(), true);
++            if (g == null || g.getMobs().isEmpty()) return;
++            ev.grupo = g.getId();
++            ev.fim = System.currentTimeMillis() + 30 * 60_000L;
++        } else {
++            ev.fim = System.currentTimeMillis() + 20 * 60_000L;
++        }
++        evento = ev;
++        anunciarTodos(CHEFES, eventosTxt.get(tipo), v, null);
++    }
++
++    private void encerrarEvento(boolean avisar) {
++        Evento ev = evento;
++        evento = null;
++        if (ev == null) return;
++        if (ev.grupo != Integer.MIN_VALUE) {
++            GameMap map = World.world.getMap(ev.mapa);
++            if (map != null && map.getMobGroups().containsKey(ev.grupo)) {
++                map.getMobGroups().remove(ev.grupo);
++                SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(map, ev.grupo);
++            }
++        }
++        if (avisar) {
++            Map<String, String> v = new HashMap<>();
++            v.put("zona", ev.zona);
++            anunciarTodos(CHEFES, eventosTxt.get("fim"), v, null);
++        }
++    }
++
++    private void eventoInfo(Player p) {
++        Evento ev = evento;
++        if (ev == null) {
++            proximoEvento = System.currentTimeMillis();
++            p.sendMessage("Nenhum evento agora. Vou come\u00e7ar um!");
++            return;
++        }
++        long min = Math.max(1, (ev.fim - System.currentTimeMillis()) / 60_000);
++        estado(p).ultimoMapa = ev.mapa;
++        falar(p, CHEFES, "Juiz da Arena", "Evento em andamento: " + ev.tipo + " em " + ev.zona + " [" + ev.x + "," + ev.y
++                + "], mais " + min + " min. Para ir: .ir " + ev.mapa, null);
++    }
++
++    private void anunciarTodos(String canal, List<Frase> lista, Map<String, String> base, List<Integer> itens) {
++        if (lista == null || lista.isEmpty()) return;
++        Frase f = lista.get(ThreadLocalRandom.current().nextInt(lista.size()));
++        for (Player p : new ArrayList<>(World.world.getOnlinePlayers())) {
++            if (p == null || !p.isOnline()) continue;
++            Estado e = estado(p);
++            if (e.desligado) continue;
++            Map<String, String> v = vars(p);
++            v.putAll(base);
++            if (base.containsKey("mapa") && !base.get("mapa").isEmpty()) e.ultimoMapa = Integer.parseInt(base.get("mapa"));
++            falar(p, canal, preencher(f.quem, v), preencher(f.texto, v), itens);
++        }
++    }
++
++    // ================================================================== varredura do mundo
++    private void varrer() {
++        Map<Integer, List<Spot>> novo = new HashMap<>();
++        try {
++            for (GameMap map : new ArrayList<>(World.world.getMaps())) {
++                Map<Integer, MonsterGroup> gs = map.getMobGroups();
++                if (gs == null || gs.isEmpty()) continue;
++                SubArea sa = map.getSubArea();
++                int said = sa != null ? sa.getId() : -1;
++                for (MonsterGroup g : new ArrayList<>(gs.values())) {
++                    Map<Integer, int[]> cont = new HashMap<>();
++                    for (MonsterGrade m : new ArrayList<>(g.getMobs().values())) {
++                        if (m == null || m.getTemplate() == null) continue;
++                        int[] c = cont.computeIfAbsent(m.getTemplate().getId(), k -> new int[2]);
++                        c[0]++;
++                        c[1] = Math.max(c[1], m.getLevel());
++                    }
++                    for (Map.Entry<Integer, int[]> en : cont.entrySet()) {
++                        Spot s = new Spot();
++                        s.mapa = map.getId();
++                        s.grupo = g.getId();
++                        s.qtd = en.getValue()[0];
++                        s.nivel = en.getValue()[1];
++                        s.sa = said;
++                        s.x = map.getX();
++                        s.y = map.getY();
++                        novo.computeIfAbsent(en.getKey(), k -> new ArrayList<>()).add(s);
++                    }
++                }
++            }
++        } catch (Exception ex) {
++            Main.logger.error("Chat vivo: varredura", ex);
++            return;
++        }
++        vivos = novo;
++        // raros e procurados que acabaram de aparecer: todo mundo fica sabendo
++        Set<String> atuais = new HashSet<>();
++        for (int id : raros) anunciarAparicao(id, novo, atuais, "raro");
++        for (int id : procurados.keySet()) anunciarAparicao(id, novo, atuais, "procurado");
++        anunciados.retainAll(atuais);
++        primeiraVarredura = false;
++    }
++
++    private void anunciarAparicao(int id, Map<Integer, List<Spot>> novo, Set<String> atuais, String tipo) {
++        List<Spot> l = novo.get(id);
++        if (l == null) return;
++        for (Spot s : l) {
++            String chave = id + ":" + s.mapa + ":" + s.grupo;
++            atuais.add(chave);
++            if (!anunciados.add(chave) || primeiraVarredura) continue;
++            for (Player p : new ArrayList<>(World.world.getOnlinePlayers())) {
++                if (p == null || !p.isOnline()) continue;
++                Estado e = estado(p);
++                if (!e.desligado) anunciarRaro(p, e, id, s, tipo);
++            }
++        }
++    }
++
++    private Spot primeiroVivo(int mob) {
++        List<Spot> l = vivos.get(mob);
++        return l == null || l.isEmpty() ? null : l.get(0);
++    }
++
++    private Spot spotNaZona(int sa) {
++        Spot melhor = null;
++        for (List<Spot> l : vivos.values())
++            for (Spot s : l)
++                if (s.sa == sa && (melhor == null || s.qtd > melhor.qtd)) melhor = s;
++        return melhor;
++    }
++
++    private Zona zonaPara(int nivel) {
++        List<Integer> bons = new ArrayList<>();
++        for (Map.Entry<Integer, Zona> en : zonas.entrySet()) {
++            Zona z = en.getValue();
++            if (z.min <= nivel + 5 && z.max >= nivel - 10 && z.max - z.min <= 60 && spotNaZona(en.getKey()) != null) bons.add(en.getKey());
++        }
++        if (bons.isEmpty()) return null;
++        return zonas.get(bons.get(ThreadLocalRandom.current().nextInt(bons.size())));
++    }
++
++    private int zonaId(Zona z) {
++        for (Map.Entry<Integer, Zona> en : zonas.entrySet())
++            if (en.getValue() == z) return en.getKey();
++        return -1;
++    }
++
++    // ================================================================== utilit\u00e1rios
++    private static List<Player> jogadores(Fight fight) {
++        List<Player> out = new ArrayList<>();
++        for (Fighter f : fight.getFighters(3)) {
++            Player p = f.getPlayer();
++            if (p != null && f.getId() == p.getId() && p.isOnline() && !out.contains(p)) out.add(p);
++        }
++        return out;
++    }
++
++    private int prospeccao(Player p) {
++        int pr = p.getTotalStats(false).getEffect(Constant.STATS_ADD_PROS);
++        return Math.max(100, pr);
++    }
++
++    private double chance(double percent, int prosp) {
++        return Math.min(100.0, percent * Math.max(1.0, prosp / 100.0) * Config.rateDrop);
++    }
++
++    private double maxPercent(World.Drop d) {
++        double m = 0;
++        for (int g = 1; g <= 5; g++) {
++            World.Drop c = d.copy(g);
++            if (c != null) m = Math.max(m, c.getLocalPercent());
++        }
++        return m;
++    }
++
++    private String faixaMonstro(Monster m) {
++        int min = Integer.MAX_VALUE, max = 0;
++        for (MonsterGrade g : m.getGrades().values()) {
++            min = Math.min(min, g.getLevel());
++            max = Math.max(max, g.getLevel());
++        }
++        return min == max ? String.valueOf(min) : min + "\u2013" + max;
++    }
++
++    private static String fmt(double v) {
++        if (v >= 10) return String.valueOf(Math.round(v));
++        String s = String.format(Locale.ROOT, v >= 1 ? "%.1f" : "%.2f", v);
++        if (s.contains(".")) s = s.replaceAll("0+$", "").replaceAll("\\.$", "");
++        return s.replace('.', ',');
++    }
++
++    private String nomeMob(int id) {
++        String n = nomeMob.get(id);
++        return n != null ? n : "Monstro";
++    }
++
++    private String nomeSa(int sa) {
++        String n = nomeSa.get(sa);
++        return n != null ? n : "algum lugar";
++    }
++
++    private static String marcadores(int de, int n) {
++        StringBuilder sb = new StringBuilder();
++        for (int i = de; i < de + n; i++) sb.append(i > de ? " " : "").append("\u00b0").append(i);
++        return sb.toString();
++    }
++
++    private Map<String, String> vars(Player p) {
++        Map<String, String> v = new HashMap<>();
++        v.put("nome", p.getName());
++        v.put("nivel", String.valueOf(p.getLevel()));
++        v.put("capital", String.valueOf(p.getCapital()));
++        v.put("pontos", String.valueOf(p.get_spellPts()));
++        v.put("vida", String.valueOf(p.getMaxPdv() > 0 ? p.getCurPdv() * 100 / p.getMaxPdv() : 100));
++        v.put("energia", String.valueOf(p.getEnergy()));
++        v.put("xp", String.valueOf(Config.rateXp));
++        v.put("drop", String.valueOf(Config.rateDrop));
++        v.put("prosp", String.valueOf(prospeccao(p)));
++        return v;
++    }
++
++    private String preencher(String texto, Map<String, String> v) {
++        if (texto == null) return "";
++        String t = texto;
++        if (t.contains("{como_ir}")) {
++            String mapa = v.get("mapa");
++            List<Frase> ci = modelos.get("como_ir");
++            t = t.replace("{como_ir}", mapa == null || mapa.isEmpty() || ci == null || ci.isEmpty() ? "" : ci.get(0).texto);
++        }
++        for (Map.Entry<String, String> e : v.entrySet())
++            t = t.replace("{" + e.getKey() + "}", e.getValue() == null ? "" : e.getValue());
++        return t.trim();
++    }
++
++    private boolean modelo(Player p, Estado e, String canal, String tipo, Map<String, String> v, List<Integer> itens) {
++        Frase f = sorteia(modelos.get(tipo), e);
++        if (f == null) return false;
++        falar(p, canal, preencher(f.quem, v), preencher(f.texto, v), itens);
++        return true;
++    }
++
++    private Frase sorteia(List<Frase> lista, Estado e) {
++        if (lista == null || lista.isEmpty()) return null;
++        Frase f = null;
++        for (int i = 0; i < 6; i++) {
++            f = lista.get(ThreadLocalRandom.current().nextInt(lista.size()));
++            if (!e.recentes.contains(f.texto)) break;
++        }
++        lembrar(e, f.texto);
++        return f;
++    }
++
++    private void lembrar(Estado e, String chave) {
++        e.recentes.addLast(chave);
++        while (e.recentes.size() > 30) e.recentes.removeFirst();
++    }
++
++    private static String limpar(String s) {
++        return s.replace('|', '/').replace("\n", " ");
++    }
++
++    /** Uma mensagem no canal, dita por "quem"; itens viram links clic\u00e1veis nos marcadores \u00b00, \u00b01... */
++    private void falar(Player p, String canal, String quem, String texto, List<Integer> itens) {
++        if (texto == null || texto.isEmpty()) return;
++        StringBuilder its = new StringBuilder();
++        if (itens != null)
++            for (int id : itens) {
++                ObjectTemplate t = World.world.getObjTemplate(id);
++                if (t == null) continue;
++                if (its.length() > 0) its.append('!');
++                its.append(id).append('!').append(t.getStrTemplate() == null ? "" : t.getStrTemplate());
++            }
++        String nome = quem == null || quem.isEmpty() ? "LabTech" : limpar(quem);
++        SocketManager.send(p, "cMK" + canal + "|0|" + nome + "|" + limpar(texto) + "|" + its);
++    }
++
++    // ================================================================== leitura do TSV
++    private synchronized void carregar() {
++        long mod = -3;
++        try {
++            if (!Files.exists(ARQUIVO)) return;
++            mod = Files.getLastModifiedTime(ARQUIVO).toMillis();
++            if (mod == lidoEm) return;
++            dicas.clear(); modelos.clear(); eventosTxt.clear(); dicasNivel.clear(); dicasNivelFaixa.clear();
++            curiosidades.clear(); segredos.clear(); boasVindas.clear(); builds.clear(); conjuntos.clear(); zonas.clear();
++            chefes.clear(); nomeMob.clear(); nomeSa.clear(); mobZonas.clear(); procurados.clear(); raros.clear();
++            locais.clear(); calaboucos.clear();
++            for (String linha : Files.readAllLines(ARQUIVO, StandardCharsets.UTF_8)) {
++                if (linha.isEmpty() || linha.startsWith("#")) continue;
++                String[] c = linha.split("\t", -1);
++                try {
++                    switch (c[0]) {
++                        case "config":
++                            if (c[1].equals("intervalo")) {
++                                String[] mm = c[2].split("-");
++                                minSeg = Integer.parseInt(mm[0]);
++                                maxSeg = Math.max(minSeg, Integer.parseInt(mm[1]));
++                            }
++                            break;
++                        case "dica": dicas.computeIfAbsent(c[1], k -> new ArrayList<>()).add(new Frase(c[2], c[3])); break;
++                        case "dica_nivel": {
++                            String[] ab = c[1].split("-");
++                            dicasNivelFaixa.add(new int[]{Integer.parseInt(ab[0]), Integer.parseInt(ab[1])});
++                            dicasNivel.add(new Frase(c[2], c[3]));
++                            break;
++                        }
++                        case "curiosidade": curiosidades.add(new Frase(c[2], c[3])); break;
++                        case "segredo": segredos.add(new Frase(c[2], c[3])); break;
++                        case "boas_vindas": boasVindas.add(new Frase(c[2], c[3])); break;
++                        case "modelo": modelos.computeIfAbsent(c[1], k -> new ArrayList<>()).add(new Frase(c[2], c[3])); break;
++                        case "evento": eventosTxt.computeIfAbsent(c[1], k -> new ArrayList<>()).add(new Frase(c[2], c[3])); break;
++                        case "build": {
++                            List<int[]> pares = new ArrayList<>();
++                            for (String par : c[2].split(";")) {
++                                String[] pv = par.split("=");
++                                pares.add(new int[]{Integer.parseInt(pv[0]), Integer.parseInt(pv[1])});
++                            }
++                            builds.put(c[1], pares.toArray(new int[0][]));
++                            break;
++                        }
++                        case "conjunto": {
++                            Conjunto k = new Conjunto();
++                            k.nivel = Integer.parseInt(c[2]);
++                            k.notas = Arrays.stream(c[3].split(",")).mapToInt(Integer::parseInt).toArray();
++                            k.nome = c[4];
++                            k.ids = Arrays.stream(c[5].split(",")).mapToInt(Integer::parseInt).toArray();
++                            k.resumo = c.length > 6 ? c[6] : "";
++                            conjuntos.add(k);
++                            break;
++                        }
++                        case "zona": {
++                            Zona z = new Zona();
++                            z.min = Integer.parseInt(c[2]);
++                            z.max = Integer.parseInt(c[3]);
++                            z.nome = c[4];
++                            z.mobs = c[5];
++                            zonas.put(Integer.parseInt(c[1]), z);
++                            break;
++                        }
++                        case "chefe": {
++                            Chefe k = new Chefe();
++                            k.id = Integer.parseInt(c[1]);
++                            k.min = Integer.parseInt(c[2]);
++                            k.max = Integer.parseInt(c[3]);
++                            k.ficha = c[4];
++                            k.dica = c[5];
++                            chefes.put(k.id, k);
++                            break;
++                        }
++                        case "nome_mob": nomeMob.put(Integer.parseInt(c[1]), c[2]); break;
++                        case "nome_sa": nomeSa.put(Integer.parseInt(c[1]), c[2]); break;
++                        case "mob_zona": mobZonas.put(Integer.parseInt(c[1]), Arrays.stream(c[2].split(",")).mapToInt(Integer::parseInt).toArray()); break;
++                        case "raro": raros.add(Integer.parseInt(c[1])); break;
++                        case "procurado": {
++                            int[] sas = c.length > 2 && !c[2].isEmpty()
++                                    ? Arrays.stream(c[2].split(",")).filter(x -> !x.trim().isEmpty()).mapToInt(x -> Integer.parseInt(x.trim())).toArray() : new int[0];
++                            procurados.put(Integer.parseInt(c[1]), sas);
++                            break;
++                        }
++                        case "local_secreto": {
++                            Local l = new Local();
++                            l.mapa = Integer.parseInt(c[1]);
++                            l.nome = c[2];
++                            l.xy = c[3];
++                            l.nota = c[4];
++                            locais.add(l);
++                            break;
++                        }
++                        case "calabouco": {
++                            Calabouco k = new Calabouco();
++                            k.chave = c[1];
++                            k.nome = c[2];
++                            k.chefe = Integer.parseInt(c[3]);
++                            String[] fx = c[4].split("-");
++                            k.min = Integer.parseInt(fx[0]);
++                            k.max = Integer.parseInt(fx[1]);
++                            k.primeira = Integer.parseInt(c[5]);
++                            for (String s : c[6].split(",")) k.salas.add(Integer.parseInt(s));
++                            calaboucos.add(k);
++                            break;
++                        }
++                        case "estatistica": estatistica = c[2].split("\\|"); break;
++                        default:
++                    }
++                } catch (Exception linhaRuim) {
++                    // linha que n\u00e3o bate com o formato: ignora e segue
++                }
++            }
++            lidoEm = mod;
++            Main.logger.info("Chat vivo: " + modelos.size() + " modelos, " + chefes.size() + " chefes, " + zonas.size() + " zonas carregados");
++        } catch (Exception ex) {
++            Main.logger.error("Chat vivo: falha ao ler " + ARQUIVO, ex);
++            lidoEm = mod;
++        }
++    }
++}
 diff --git a/src/org/starloco/locos/panel/ClassSpellBar.java b/src/org/starloco/locos/panel/ClassSpellBar.java
 new file mode 100644
 index 0000000..4b18e01
@@ -1166,6 +2578,483 @@ index 0000000..efc901c
 +        } catch (Exception e) {
 +            Main.logger.error("Drone de IA: falha ao ler " + ARQUIVO, e);
 +            lidoEm = mod;   // tenta de novo quando o arquivo mudar
++        }
++    }
++}
+diff --git a/src/org/starloco/locos/panel/Figurantes.java b/src/org/starloco/locos/panel/Figurantes.java
+new file mode 100644
+index 0000000..47cb00e
+--- /dev/null
++++ b/src/org/starloco/locos/panel/Figurantes.java
+@@ -0,0 +1,471 @@
++package org.starloco.locos.panel;
++
++import org.starloco.locos.area.SubArea;
++import org.starloco.locos.area.map.GameCase;
++import org.starloco.locos.area.map.GameMap;
++import org.starloco.locos.client.Player;
++import org.starloco.locos.common.PathFinding;
++import org.starloco.locos.common.SocketManager;
++import org.starloco.locos.entity.monster.Monster;
++import org.starloco.locos.entity.monster.MonsterGrade;
++import org.starloco.locos.entity.monster.MonsterGroup;
++import org.starloco.locos.game.scheduler.Updatable;
++import org.starloco.locos.game.world.World;
++import org.starloco.locos.kernel.Main;
++import org.starloco.locos.object.ObjectTemplate;
++import org.starloco.locos.util.generator.NameGenerator;
++
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.nio.file.Paths;
++import java.util.*;
++import java.util.concurrent.ThreadLocalRandom;
++
++/**
++ * Mundo LabTech: figurantes, personagens que imitam jogadores. Eles aparecem perto de quem est\u00e1 jogando, andam pelo
++ * mapa, sentam, conversam (bal\u00e3o em cima deles), ca\u00e7am os monstros do mapa (somem na luta, como um jogador de
++ * verdade, e voltam com o resultado), contam o que dropou e anunciam vendas
++ * no canal de Itens. N\u00e3o s\u00e3o contas nem clientes: s\u00e3o sprites de jogador que o servidor desenha e move.
++ * Falas e apelidos v\u00eam de scripts/labtech/chat_vivo.tsv (FIGURANTES em content.py).
++ */
++public class Figurantes extends Updatable<Void> {
++
++    public static final Figurantes instance = new Figurantes(2000);
++
++    private static final Path ARQUIVO = Paths.get("scripts", "labtech", "chat_vivo.tsv");
++    private static final int ID_BASE = 2_000_000;
++    private static final String[] CLASSES = {"", "Feca", "Osamodas", "Enutrof", "Sram", "Xelor", "Ecaflip", "Eniripsa",
++            "Iop", "Cra", "Sadida", "Sacrier", "Pandawa", "LabTech"};
++    private static final int[][] PALETAS = {
++            {0x2A1C12, 0xF0F0EC, 0x19C8D2}, {0x3B2A1A, 0x8B1E1E, 0xE8C15A}, {0x1E2B4A, 0x4A7BC8, 0xDADADA},
++            {0x2E4A1E, 0x7FB041, 0x5A3A1A}, {0x4A1E4A, 0xB05AC8, 0xF2D8F2}, {0x121212, 0x3A3A3A, 0xC81E1E},
++            {0x5A3A1A, 0xE8A04A, 0x1E1E1E}, {0xF2E6C8, 0x2A6A8A, 0x8A2A2A}, {0x6A4A2A, 0x2A8A6A, 0xE8E8E8}};
++
++    private static class Fig {
++        int id, classe, sexo, nivel, cor;
++        String nome, roupa = ",,,,";
++        GameMap mapa, mapaLuta;
++        int cell = -1;
++        long proxima, saiEm, fimLuta, ultimoDrop, ultimaFala;
++        MonsterGroup alvo, lutando;
++    }
++
++    private final List<Fig> figs = new ArrayList<>();
++    private final List<String> apelidos = new ArrayList<>();
++    private final Map<String, List<String>> falas = new HashMap<>();
++    private final List<Integer> itens = new ArrayList<>();
++    private final Map<Integer, String> nomeMob = new HashMap<>();
++    private final List<Object[]> respawns = new ArrayList<>();
++    private final Map<Integer, List<GameMap>> mapasPorSa = new HashMap<>();
++    private int quantidade = 10;
++    private long lidoEm = -1, proximaDistribuicao, proximaVenda;
++
++    public Figurantes(int wait) {
++        super(wait);
++    }
++
++    @Override
++    public void update() {
++        if (!this.verify()) return;
++        carregar();
++        if (falas.isEmpty()) return;
++        if (figs.isEmpty()) criar();
++        long agora = System.currentTimeMillis();
++        try {
++            respawnTick(agora);
++            if (agora > proximaDistribuicao) {
++                proximaDistribuicao = agora + 20_000;
++                distribuir();
++            }
++            for (Fig f : figs) tick(f, agora);
++            if (proximaVenda == 0) proximaVenda = agora + 90_000;
++            if (agora > proximaVenda) {
++                proximaVenda = agora + 1000L * (150 + ThreadLocalRandom.current().nextInt(150));
++                anunciarVenda();
++            }
++        } catch (Exception ex) {
++            Main.logger.error("Figurantes", ex);
++        }
++    }
++
++    /** Quem carrega um mapa v\u00ea os figurantes que est\u00e3o nele. */
++    public static void onMapLoad(Player p) {
++        if (p == null || p.getCurMap() == null) return;
++        for (Fig f : instance.figs)
++            if (f.mapa == p.getCurMap() && f.lutando == null) p.send("GM|+" + instance.gm(f));
++    }
++
++    // ------------------------------------------------------------------ comportamento
++    private void tick(Fig f, long agora) {
++        if (f.lutando != null) {
++            if (agora > f.fimLuta) terminarLuta(f, agora);
++            return;
++        }
++        if (f.mapa == null || agora < f.proxima) return;
++        if (agora > f.saiEm) {
++            if (ThreadLocalRandom.current().nextInt(100) < 40) falar(f, "tchau", null, null);
++            tirar(f);
++            return;
++        }
++        f.proxima = agora + 1000L * (4 + ThreadLocalRandom.current().nextInt(9));
++        if (f.alvo != null) {
++            if (f.mapa.getMobGroups().get(f.alvo.getId()) == f.alvo) comecarLuta(f, agora);
++            f.alvo = null;
++            return;
++        }
++        int r = ThreadLocalRandom.current().nextInt(100);
++        MonsterGroup g = r < 35 ? grupoLivre(f.mapa) : null;
++        if (g != null) {
++            int destino = celulaPerto(f.mapa, g.getCellId());
++            int passos = destino > 0 ? mover(f, destino) : 0;
++            if (passos > 0) {
++                f.alvo = g;
++                f.proxima = System.currentTimeMillis() + 1500 + 450L * passos;
++            }
++        } else if (r >= 35 && r < 45 && agora - f.ultimaFala > 60_000) {
++            falar(f, "passeio", null, null);
++        } else if (r >= 45 && r < 52) {
++            SocketManager.GAME_SEND_eUK_PACKET_TO_MAP(f.mapa, f.id, 1);   // senta
++        } else {
++            int destino = f.mapa.getRandomNearFreeCellId(f.cell);
++            if (destino > 0 && mover(f, destino) == 0) {
++                destino = f.mapa.getRandomFreeCellId();   // preso num canto: tenta um lugar qualquer do mapa
++                if (destino > 0) mover(f, destino);
++            }
++        }
++    }
++
++    private void comecarLuta(Fig f, long agora) {
++        MonsterGroup g = f.alvo;
++        GameMap m = f.mapa;
++        m.getMobGroups().remove(g.getId());
++        enviar(m, "GM|-" + g.getId());
++        falar(f, "luta", g, null);
++        enviar(m, "GM|-" + f.id);
++        f.lutando = g;
++        f.mapaLuta = m;
++        f.fimLuta = agora + 1000L * (25 + ThreadLocalRandom.current().nextInt(45));
++    }
++
++    private void terminarLuta(Fig f, long agora) {
++        MonsterGroup g = f.lutando;
++        GameMap m = f.mapaLuta;
++        f.lutando = null;
++        boolean venceu = ThreadLocalRandom.current().nextInt(100) < 85;
++        int cell = m.getRandomNearFreeCellId(f.cell);
++        colocar(f, m, cell > 0 ? cell : f.cell, false);
++        if (venceu && ThreadLocalRandom.current().nextInt(4) == 0 && f.nivel < 200) f.nivel++;
++        falar(f, venceu ? "venci" : "perdi", g, null);
++        if (venceu && !jogadores(m).isEmpty() && agora - f.ultimoDrop > 4 * 60_000L && ThreadLocalRandom.current().nextInt(100) < 45)
++            dropar(f, g);
++        respawns.add(new Object[]{m, g, agora + 1000L * (venceu ? 45 + ThreadLocalRandom.current().nextInt(45) : 8)});
++    }
++
++    /** O figurante conta no mapa um item que dropou (s\u00f3 fala: n\u00e3o interage com quem est\u00e1 jogando). */
++    private void dropar(Fig f, MonsterGroup g) {
++        List<MonsterGrade> mobs = new ArrayList<>(g.getMobs().values());
++        if (mobs.isEmpty()) return;
++        Monster m = mobs.get(ThreadLocalRandom.current().nextInt(mobs.size())).getTemplate();
++        if (m == null || m.getDrops() == null || m.getDrops().isEmpty()) return;
++        List<ObjectTemplate> bons = new ArrayList<>(), todos = new ArrayList<>();
++        for (World.Drop d : m.getDrops()) {
++            ObjectTemplate t = World.world.getObjTemplate(d.getObjectId());
++            if (t == null) continue;
++            todos.add(t);
++            if (t.getPanoId() > 0 || (t.getType() >= 1 && t.getType() <= 11) || t.getType() == 16 || t.getType() == 17) bons.add(t);
++        }
++        List<ObjectTemplate> escolha = !bons.isEmpty() && ThreadLocalRandom.current().nextInt(100) < 60 ? bons : todos;
++        if (escolha.isEmpty()) return;
++        ObjectTemplate t = escolha.get(ThreadLocalRandom.current().nextInt(escolha.size()));
++        f.ultimoDrop = System.currentTimeMillis();
++        falar(f, "drop", null, Collections.singletonList(t.getId()));
++    }
++
++    private void respawnTick(long agora) {
++        Iterator<Object[]> it = respawns.iterator();
++        while (it.hasNext()) {
++            Object[] r = it.next();
++            if (agora < (Long) r[2]) continue;
++            it.remove();
++            GameMap m = (GameMap) r[0];
++            MonsterGroup g = (MonsterGroup) r[1];
++            if (m.getMobGroups().containsKey(g.getId())) continue;
++            int cell = m.getRandomFreeCellId();
++            if (cell > 0) g.setCellId(cell);
++            m.respawnGroup(g);
++        }
++    }
++
++    /** Cada jogador v\u00ea de um a dois figurantes na sub\u00e1rea onde est\u00e1; os que sobram esperam. */
++    private void distribuir() {
++        for (Player p : new ArrayList<>(World.world.getOnlinePlayers())) {
++            if (p == null || !p.isOnline() || p.getFight() != null || p.getCurMap() == null) continue;
++            GameMap mapa = p.getCurMap();
++            SubArea sa = mapa.getSubArea();
++            if (sa == null || !elegivel(mapa)) continue;
++            int perto = 0;
++            for (Fig f : figs) {
++                GameMap m = f.lutando != null ? f.mapaLuta : f.mapa;
++                if (m != null && m.getSubArea() == sa) perto++;
++            }
++            int alvo = mapa.getMobGroups().isEmpty() ? 1 : 2;
++            if (perto >= alvo) continue;
++            List<Fig> livres = new ArrayList<>();
++            for (Fig f : figs)
++                if (f.mapa == null && f.lutando == null) livres.add(f);
++            if (livres.isEmpty()) continue;
++            Fig f = livres.get(ThreadLocalRandom.current().nextInt(livres.size()));
++            GameMap destino = mapa;
++            if (ThreadLocalRandom.current().nextInt(100) >= 55) {
++                List<GameMap> lista = mapasDaSa(sa.getId());
++                if (!lista.isEmpty()) destino = lista.get(ThreadLocalRandom.current().nextInt(lista.size()));
++            }
++            f.nivel = Math.max(1, Math.min(200, p.getLevel() + ThreadLocalRandom.current().nextInt(31) - 15));
++            vestir(f);
++            int cell = destino.getRandomFreeCellId();
++            if (cell > 0) colocar(f, destino, cell, true);
++        }
++    }
++
++    private boolean elegivel(GameMap m) {
++        for (MonsterGroup g : m.getMobGroups().values())
++            if (g.isFix()) return false;   // salas de calabou\u00e7o
++        return m.getMountPark() == null;
++    }
++
++    private List<GameMap> mapasDaSa(int sa) {
++        return mapasPorSa.computeIfAbsent(sa, k -> {
++            List<GameMap> l = new ArrayList<>();
++            for (GameMap m : World.world.getMaps())
++                if (m.getSubArea() != null && m.getSubArea().getId() == sa && !m.getMobGroups().isEmpty() && elegivel(m)) l.add(m);
++            return l;
++        });
++    }
++
++    private MonsterGroup grupoLivre(GameMap m) {
++        List<MonsterGroup> l = new ArrayList<>();
++        for (MonsterGroup g : m.getMobGroups().values())
++            if (!g.isFix() && !g.getMobs().isEmpty() && ChatVivo.multiplicadorDropGrupo(m, g) == 1.0) l.add(g);
++        return l.isEmpty() ? null : l.get(ThreadLocalRandom.current().nextInt(l.size()));
++    }
++
++    private int celulaPerto(GameMap m, int cell) {
++        int c = m.getRandomNearFreeCellId(cell);
++        return c > 0 ? c : cell;
++    }
++
++    // ------------------------------------------------------------------ apar\u00eancia e pacotes
++    private void criar() {
++        List<String> nomes = new ArrayList<>(apelidos);
++        Collections.shuffle(nomes);
++        for (int i = 0; i < quantidade; i++) {
++            Fig f = new Fig();
++            f.id = ID_BASE + i;
++            f.classe = ThreadLocalRandom.current().nextInt(100) < 8 ? 13 : 1 + ThreadLocalRandom.current().nextInt(12);
++            f.sexo = ThreadLocalRandom.current().nextInt(2);
++            f.cor = ThreadLocalRandom.current().nextInt(PALETAS.length);
++            f.nome = i < nomes.size() ? nomes.get(i) : NameGenerator.nameGenerator.compose(2 + ThreadLocalRandom.current().nextInt(2));
++            f.nivel = 1;
++            figs.add(f);
++        }
++    }
++
++    private void vestir(Fig f) {
++        int arma = sortearItem(f.nivel, 2, 3, 4, 5, 6, 7, 8, 19), chapeu = sortearItem(f.nivel, 16), capa = sortearItem(f.nivel, 17, 81);
++        f.roupa = hex(f.classe == 13 ? 30001 : arma) + "," + hex(f.classe == 13 ? 30027 : chapeu) + "," + hex(f.classe == 13 ? 30028 : capa) + ",,";
++    }
++
++    private int sortearItem(int nivel, int... tipos) {
++        List<Integer> l = new ArrayList<>();
++        for (int id : itens) {
++            ObjectTemplate t = World.world.getObjTemplate(id);
++            if (t == null || t.getLevel() > nivel || t.getLevel() < nivel - 40) continue;
++            for (int tp : tipos)
++                if (t.getType() == tp) {
++                    l.add(id);
++                    break;
++                }
++        }
++        return l.isEmpty() || ThreadLocalRandom.current().nextInt(100) < 15 ? -1 : l.get(ThreadLocalRandom.current().nextInt(l.size()));
++    }
++
++    private static String hex(int id) {
++        return id > 0 ? Integer.toHexString(id) : "";
++    }
++
++    /** Mesmo formato de Player.parseToGM: c\u00e9lula;dire\u00e7\u00e3o;0;id;nome;classe;gfx^tamanho;sexo;alinhamento;cores;roupa;aura... */
++    private String gm(Fig f) {
++        int[] c = PALETAS[f.cor];
++        int aura = f.nivel > 199 ? 2 : f.nivel > 99 ? 1 : 0;
++        return f.cell + ";" + (1 + 2 * ThreadLocalRandom.current().nextInt(4)) + ";0;" + f.id + ";" + f.nome + ";" + f.classe + ";"
++                + (f.classe * 10 + f.sexo) + "^100;" + f.sexo + ";0,0,0," + (f.nivel + f.id) + ";"
++                + Integer.toHexString(c[0]) + ";" + Integer.toHexString(c[1]) + ";" + Integer.toHexString(c[2]) + ";"
++                + f.roupa + ";" + aura + ";;;;;0;;0;";
++    }
++
++    private void colocar(Fig f, GameMap m, int cell, boolean chegando) {
++        f.mapa = m;
++        f.cell = cell;
++        enviar(m, "GM|+" + gm(f));
++        long agora = System.currentTimeMillis();
++        f.proxima = agora + 1000L * (3 + ThreadLocalRandom.current().nextInt(6));
++        if (chegando) {
++            f.saiEm = agora + 1000L * (180 + ThreadLocalRandom.current().nextInt(360));
++            if (ThreadLocalRandom.current().nextInt(100) < 45) falar(f, "oi", null, null);
++        }
++    }
++
++    private void tirar(Fig f) {
++        if (f.mapa != null) enviar(f.mapa, "GM|-" + f.id);
++        f.mapa = null;
++        f.alvo = null;
++    }
++
++    /** Anda at\u00e9 a c\u00e9lula e devolve quantos passos deu (0 = n\u00e3o achou caminho). */
++    private int mover(Fig f, int destino) {
++        List<Character> dirs = caminho(f.mapa, f.cell, destino);
++        if (dirs == null || dirs.isEmpty()) return 0;
++        // formato do cliente: "a" + c\u00e9lula inicial, depois dire\u00e7\u00e3o + c\u00e9lula onde cada reta termina
++        StringBuilder sb = new StringBuilder("a").append(World.world.getCryptManager().cellID_To_Code(f.cell));
++        int c = f.cell;
++        for (int i = 0; i < dirs.size(); i++) {
++            c = PathFinding.GetCaseIDFromDirection(c, dirs.get(i), f.mapa, true);
++            if (i == dirs.size() - 1 || !dirs.get(i + 1).equals(dirs.get(i)))
++                sb.append(dirs.get(i)).append(World.world.getCryptManager().cellID_To_Code(c));
++        }
++        for (Player p : jogadores(f.mapa))
++            SocketManager.GAME_SEND_GA_PACKET(p.getGameClient(), "0", "1", String.valueOf(f.id), sb.toString());
++        f.cell = destino;
++        return dirs.size();
++    }
++
++    /**
++     * Busca em largura s\u00f3 nas diagonais (b, d, f, h), que valem em qualquer mapa. O PathFinding do StarLoco n\u00e3o
++     * serve aqui: o getNearestCellAround dele s\u00f3 aceita c\u00e9lulas da borda e quase nunca acha caminho.
++     */
++    private static List<Character> caminho(GameMap m, int de, int ate) {
++        if (m == null || de == ate || m.getCase(ate) == null) return null;
++        char[] dirs = {'b', 'd', 'f', 'h'};
++        Map<Integer, Integer> veio = new HashMap<>();
++        Map<Integer, Character> pelo = new HashMap<>();
++        ArrayDeque<Integer> fila = new ArrayDeque<>();
++        fila.add(de);
++        veio.put(de, -1);
++        while (!fila.isEmpty() && veio.size() < 600) {
++            int c = fila.poll();
++            if (c == ate) break;
++            for (char d : dirs) {
++                int n = PathFinding.GetCaseIDFromDirection(c, d, m, true);
++                if (n < 0 || veio.containsKey(n)) continue;
++                GameCase gc = m.getCase(n);
++                if (gc == null || !gc.isWalkable(false)) continue;
++                veio.put(n, c);
++                pelo.put(n, d);
++                fila.add(n);
++            }
++        }
++        if (!veio.containsKey(ate)) return null;
++        LinkedList<Character> l = new LinkedList<>();
++        for (int c = ate; c != de; c = veio.get(c)) l.addFirst(pelo.get(c));
++        return l.size() > 40 ? null : l;
++    }
++
++    private List<Player> jogadores(GameMap m) {
++        List<Player> l = new ArrayList<>();
++        if (m == null) return l;
++        for (Player p : m.getPlayers())
++            if (p != null && p.isOnline() && p.getFight() == null && p.getGameClient() != null) l.add(p);
++        return l;
++    }
++
++    private void enviar(GameMap m, String pacote) {
++        for (Player p : jogadores(m)) p.send(pacote);
++    }
++
++    private void falar(Fig f, String tipo, MonsterGroup g, List<Integer> itens) {
++        List<String> l = falas.get(tipo);
++        if (l == null || l.isEmpty() || f.mapa == null) return;
++        List<Player> ali = jogadores(f.mapa);
++        if (ali.isEmpty()) return;
++        String t = l.get(ThreadLocalRandom.current().nextInt(l.size()));
++        String mob = "monstro";
++        if (g != null && !g.getMobs().isEmpty()) {
++            MonsterGrade m = g.getMobs().values().iterator().next();
++            mob = nomeMob.getOrDefault(m.getTemplate().getId(), "monstro");
++        }
++        t = t.replace("{mob}", mob).replace("{nivel}", String.valueOf(f.nivel)).replace("{classe}", CLASSES[f.classe])
++                .replace("{item}", "\u00b00");
++        String pacote = "cMK|" + f.id + "|" + f.nome + "|" + t.replace('|', '/') + "|" + links(itens);
++        for (Player p : ali) p.send(pacote);
++        f.ultimaFala = System.currentTimeMillis();
++    }
++
++    private String links(List<Integer> ids) {
++        StringBuilder sb = new StringBuilder();
++        if (ids != null)
++            for (int id : ids) {
++                ObjectTemplate t = World.world.getObjTemplate(id);
++                if (t == null) continue;
++                if (sb.length() > 0) sb.append('!');
++                sb.append(id).append('!').append(t.getStrTemplate() == null ? "" : t.getStrTemplate());
++            }
++        return sb.toString();
++    }
++
++    /** Um figurante anuncia uma venda (ou compra) no canal de Itens, com um item perto do n\u00edvel de quem est\u00e1 jogando. */
++    private void anunciarVenda() {
++        List<Player> on = new ArrayList<>(World.world.getOnlinePlayers());
++        on.removeIf(x -> x == null || !x.isOnline() || ChatVivo.chatDesligado(x));
++        if (on.isEmpty() || figs.isEmpty()) return;
++        Player ref = on.get(ThreadLocalRandom.current().nextInt(on.size()));
++        List<Integer> l = new ArrayList<>();
++        for (int id : itens) {
++            ObjectTemplate t = World.world.getObjTemplate(id);
++            if (t != null && Math.abs(t.getLevel() - ref.getLevel()) <= 20) l.add(id);
++        }
++        List<String> frases = falas.get("venda");
++        if (l.isEmpty() || frases == null || frases.isEmpty()) return;
++        int item = l.get(ThreadLocalRandom.current().nextInt(l.size()));
++        ObjectTemplate t = World.world.getObjTemplate(item);
++        Fig f = figs.get(ThreadLocalRandom.current().nextInt(figs.size()));
++        long preco = Math.max(1, (long) t.getLevel() * t.getLevel() * (20 + ThreadLocalRandom.current().nextInt(60)) / 1000);
++        String texto = frases.get(ThreadLocalRandom.current().nextInt(frases.size()))
++                .replace("{item}", "\u00b00").replace("{preco}", String.valueOf(preco)).replace('|', '/');
++        String pacote = "cMK:|" + f.id + "|" + f.nome + "|" + texto + "|" + links(Collections.singletonList(item));
++        for (Player p : on) p.send(pacote);
++    }
++
++    // ------------------------------------------------------------------ dados
++    private synchronized void carregar() {
++        long mod = -3;
++        try {
++            if (!Files.exists(ARQUIVO)) return;
++            mod = Files.getLastModifiedTime(ARQUIVO).toMillis();
++            if (mod == lidoEm) return;
++            apelidos.clear();
++            falas.clear();
++            itens.clear();
++            nomeMob.clear();
++            for (String linha : Files.readAllLines(ARQUIVO, StandardCharsets.UTF_8)) {
++                String[] c = linha.split("\t", -1);
++                if (c.length < 3) continue;
++                try {
++                    switch (c[0]) {
++                        case "fig_config": if (c[1].equals("quantidade")) quantidade = Integer.parseInt(c[2]); break;
++                        case "fig_apelido": apelidos.add(c[2]); break;
++                        case "fig_fala": falas.computeIfAbsent(c[1], k -> new ArrayList<>()).add(c[2]); break;
++                        case "item": itens.add(Integer.parseInt(c[1])); break;
++                        case "nome_mob": nomeMob.put(Integer.parseInt(c[1]), c[2]); break;
++                        default:
++                    }
++                } catch (Exception ignored) {
++                }
++            }
++            lidoEm = mod;
++        } catch (Exception ex) {
++            Main.logger.error("Figurantes: falha ao ler " + ARQUIVO, ex);
++            lidoEm = mod;
 +        }
 +    }
 +}

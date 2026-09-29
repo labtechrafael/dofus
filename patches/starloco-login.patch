@@ -1,0 +1,15 @@
+diff --git a/src/org/starloco/locos/kernel/Console.java b/src/org/starloco/locos/kernel/Console.java
+index fc7d62d..b190af1 100644
+--- a/src/org/starloco/locos/kernel/Console.java
++++ b/src/org/starloco/locos/kernel/Console.java
+@@ -28,7 +28,9 @@ public class Console extends Thread {
+         while (Config.isRunning) {
+             try {
+                 this.parse(scanner.nextLine());
+-            } catch (NoSuchElementException ignored) {}
++            } catch (NoSuchElementException e) {
++                return;   // LabTech: sem teclado (iniciado pelo painel) nao ha o que ler; sai em vez de girar a 100% de CPU
++            }
+         }
+     }
+ 

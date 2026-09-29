@@ -165,6 +165,25 @@ janela de compra abre na hora. Dá para comprar qualquer item, mas para equipar 
 
 ---
 
+## O mundo vivo
+
+O chat conversa com você o tempo todo, conforme o que você está fazendo, o seu nível e o lugar. Cada tipo de mensagem usa um canal do chat, que você liga e desliga nas caixinhas:
+
+| Canal | Quem fala | O que aparece |
+|---|---|---|
+| **Dicas** (cinza) | Mestre Malte, Estagiário, celebridades | Pontos parados, equipamento vazio ou velho (com o item sugerido), profissão, alinhamento, montaria, onde upar, curiosidades, segredos e lugares escondidos |
+| **Itens** (marrom) | Mercador LabTech, Lúpula, o próprio monstro, Gimbo | Build e conjunto para o seu nível, chance de drop dos monstros vivos agora ("Somos 12 aqui... Gelano: 0,5% para você"), chance de forjamagia de +1 PA e +1 PM |
+| **Chefes** (rosa) | Juiz da Arena, o próprio chefe, a Milícia | Ficha e estratégia dos chefes com drops e chances, monstros raros e procurados quando aparecem, Rota dos Calabouços e eventos |
+| **Informações** (verde) | | O lugar onde você entrou e os monstros dali |
+
+**Eventos:** quando você entra e a cada meia hora acontece algo num lugar do seu nível: uma invasão de 8 monstros, um chefe passeando fora do calabouço ou 20 minutos de chuva de drop. Quem vence a luta do evento ganha drop em dobro.
+
+**Rota dos Calabouços:** 38 calabouços do jogo, do Gobball Real ao Kralamor Gigante. Vença o chefe dentro do calabouço e ele entra no seu progresso (`.calaboucos`).
+
+**Figurantes:** personagens que imitam jogadores aparecem perto de você. Eles andam, sentam, conversam entre si, caçam os monstros do mapa (somem na luta e voltam contando se venceram), se gabam do que dropou e anunciam vendas no canal de Itens. Vivem a vida deles: não falam com você, não chamam pelo seu nome e não dão itens.
+
+**Lugares escondidos:** o chat mostra mapas que estão nos arquivos do servidor e ninguém encontra andando (Túnel Misterioso, Sala da Moderação, Ilha de Natal, Amakna passado, o tutorial antigo...), com coordenadas. Para ir, `.ir` e o número do mapa.
+
 ## Segredos
 
 <details>
