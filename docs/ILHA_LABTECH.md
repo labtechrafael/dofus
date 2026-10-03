@@ -180,9 +180,11 @@ O chat conversa com você o tempo todo, conforme o que você está fazendo, o se
 
 **Rota dos Calabouços:** 38 calabouços do jogo, do Gobball Real ao Kralamor Gigante. Vença o chefe dentro do calabouço e ele entra no seu progresso (`.calaboucos`).
 
+**Caçada aos Raros:** vença um monstro raro (Dopple Vlad Sombrio, Pandora, Rosa Obscura, Dragossauro Dourado Selvagem...), um procurado que fugiu da prisão ou um arquimonstro e a alma dele vai para uma **Pedra de Alma** no seu inventário, como na captura do jogo. São três álbuns (23 raros, 11 procurados e 286 arquimonstros), com progresso salvo por personagem. `.almas` mostra quanto falta e quem está vivo agora, com o caminho. Quando um raro aparece, ele avisa se a alma dele ainda falta no seu álbum.
+
 **Figurantes:** personagens que imitam jogadores aparecem perto de você. Eles andam, sentam, conversam entre si, caçam os monstros do mapa (somem na luta e voltam contando se venceram), se gabam do que dropou e anunciam vendas no canal de Itens. Vivem a vida deles: não falam com você, não chamam pelo seu nome e não dão itens.
 
-**Lugares escondidos:** o chat mostra mapas que estão nos arquivos do servidor e ninguém encontra andando (Túnel Misterioso, Sala da Moderação, Ilha de Natal, Amakna passado, o tutorial antigo...), com coordenadas. Para ir, `.ir` e o número do mapa.
+**Lugares escondidos:** o chat mostra mapas que estão nos arquivos do servidor e ninguém encontra andando (Sala da Moderação, Duty Free, Ilha de Natal, Amakna passado, o tutorial antigo...), com coordenadas. Para ir, `.ir` e o número do mapa. Só entram os 13 que o cliente consegue abrir: mapas de teste com outra versão (como o Túnel Misterioso de Amakna) dão "Impossível de carregar os dados do mapa".
 
 ## Segredos
 

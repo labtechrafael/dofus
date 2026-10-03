@@ -302,10 +302,11 @@ def gerar(log, sql_query, panel_data, scripts, lang_dir, spells_version):
     # ------------------------------------------------------------ raros (arquimonstros e aparições especiais) e procurados
     extra = {int(r[0]): r[1].strip() for r in sql_query('SELECT idMob, subArea, chances FROM starloco_game.extra_monster')}
     procurados = {m: extra.get(m, '') for m in C.CHAT_VIVO['procurados']}   # os fugitivos dos avisos de procurado
-    raros = set(extra) | {int(r[0]) for r in sql_query('SELECT id FROM starloco_game.monsters WHERE isArchmonster = 1')}
+    arqui = {int(r[0]) for r in sql_query('SELECT id FROM starloco_game.monsters WHERE isArchmonster = 1')}
+    raros = set(extra) | arqui
     for m in sorted(raros - set(procurados)):
-        if str(m) in M:
-            rows.append(('raro', str(m), ''))
+        if str(m) in M:   # 'arqui' separa os arquimonstros no álbum da Caçada aos Raros
+            rows.append(('raro', str(m), 'arqui' if m in arqui else ''))
     for m, sas in sorted(procurados.items()):
         if str(m) in M:
             rows.append(('procurado', str(m), sas))
@@ -324,10 +325,20 @@ def gerar(log, sql_query, panel_data, scripts, lang_dir, spells_version):
             return int(d.group(1)), int(d.group(2))
         m = MA['m'].get(str(mid)) or {}
         return m.get('x', '?'), m.get('y', '?')
+    # O cliente abre o mapa pelo arquivo <id>_<data>[X].swf que o servidor manda. Mapa de teste com outra versão
+    # (ou que nunca foi para o cliente) dá "Impossível de carregar os dados do mapa": esses não entram na lista.
+    pasta_cliente = os.path.join(scripts, '..', '..', '..', 'client-starloco', 'resources', 'app', 'retroclient', 'data', 'maps')
+    no_cliente = set(os.listdir(pasta_cliente)) if os.path.isdir(pasta_cliente) else None
+    def abre_no_cliente(mid):
+        if no_cliente is None or mid not in mapas_lua:
+            return no_cliente is None
+        d = re.search(r'MapDef\(\s*\d+\s*,\s*"(\d*)"\s*,\s*"([^"]*)"', open(mapas_lua[mid], encoding='utf-8', errors='replace').read())
+        return bool(d) and f'{mid}_{d.group(1)}{"X" if d.group(2) else ""}.swf' in no_cliente
     for pasta, nome, obs in C.CHAT_VIVO['pastas_secretas']:
         ids = sorted(int(re.match(r'(\d+)_', os.path.basename(f)).group(1))
                      for f in glob.glob(os.path.join(scripts, 'maps', pasta, '**', '*.lua'), recursive=True)
                      if re.match(r'(\d+)_', os.path.basename(f)))
+        ids = [i for i in ids if abre_no_cliente(i)]
         if ids:
             x, y = coords(ids[0])
             rows.append(('local_secreto', str(ids[0]), nome, f'{x},{y}', obs.replace('{mapas}', str(len(ids)))))
@@ -336,7 +347,7 @@ def gerar(log, sql_query, panel_data, scripts, lang_dir, spells_version):
         if isinstance(m, dict) and int(mid) in mapas_lua:
             por_sa.setdefault(m.get('sa'), []).append(int(mid))
     for sa, obs in C.CHAT_VIVO['subareas_ocultas'].items():
-        ids = sorted(por_sa.get(sa, []))
+        ids = [i for i in sorted(por_sa.get(sa, [])) if abre_no_cliente(i)]
         if ids:
             x, y = coords(ids[0])
             rows.append(('local_secreto', str(ids[0]), sa_nome(sa).lstrip('/'), f'{x},{y}', obs.replace('{mapas}', str(len(ids)))))

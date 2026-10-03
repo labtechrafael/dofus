@@ -58,8 +58,47 @@ index ddacb51..20217e8 100644
  GuildLevelExp = mult(10, PlayerLevelExp)
  
  JobLevelExp = { 0, 50, 140, 271, 441, 653, 905, 1199, 1543, 1911, 2330, 2792, 3297, 3840, 4439, 5078, 5762, 6493, 7280, 8097, 8980, 9898, 10875, 11903, 12985, 14122, 15315, 16564, 17873, 19242, 20672, 22166, 23726, 25353, 27048, 28815, 30656, 32572, 34566, 36641, 38800, 41044, 43378, 45804, 48325, 50946, 53669, 56498, 59437, 62491, 65664, 68960, 72385, 75943, 79640, 83482, 87475, 91624, 95937, 100421, 105082, 109930, 114971, 120215, 125671, 131348, 137256, 143407, 149811, 156481, 163429, 170669, 178214, 186080, 194283, 202839, 211765, 221082, 230808, 240964, 251574, 262660, 274248, 286364, 299037, 312297, 326175, 340705, 355924, 371870, 388582, 406106, 424486, 443772, 464016, 485274, 507604, 531071, 555541, 581687}
+diff --git a/scripts/data/maps/dungeons/Wabbits/WabbitCastle/822_Wabbit_Castle_Entrance.lua b/scripts/data/maps/dungeons/Wabbits/WabbitCastle/822_Wabbit_Castle_Entrance.lua
+index 22a05e8..f1e6022 100644
+--- a/scripts/data/maps/dungeons/Wabbits/WabbitCastle/822_Wabbit_Castle_Entrance.lua
++++ b/scripts/data/maps/dungeons/Wabbits/WabbitCastle/822_Wabbit_Castle_Entrance.lua
+@@ -42,11 +42,12 @@ map.allowedMobGrades = {
+ }
+ 
+ local function tryEntering(_, _, p)
+-    if p:getItem(961) and p:getItem(962) and p:getItem(963) then
++    -- LabTech: o Molho de Chaves tambem abre o castelo. O original chamava sendInfoMsg() sem argumentos: dava erro e
++    -- derrubava o jogador da porta.
++    if hasKeyChainFor(p, 961) or (p:getItem(961) and p:getItem(962) and p:getItem(963)) then
+         p:teleport(1767, 394)
+     else
+-        p:sendInfoMsg()
+-        -- TODO: send error (in chat)
++        p:sendMessage("A porta do Castelo do Wa Wabbit está trancada: você precisa das 3 Chaves Wabbit (ou do Molho de Chaves).")
+     end
+ end
+ 
+diff --git a/src/org/starloco/locos/area/map/ScriptMapData.java b/src/org/starloco/locos/area/map/ScriptMapData.java
+index 87f2c6d..30582e6 100644
+--- a/src/org/starloco/locos/area/map/ScriptMapData.java
++++ b/src/org/starloco/locos/area/map/ScriptMapData.java
+@@ -119,7 +119,13 @@ public class ScriptMapData extends MapData {
+         if(!(tmp instanceof Table)) return;
+         Object onMovementEndFn = ((Table)tmp).rawget(p.getCurCell().getId());
+         if(!(onMovementEndFn instanceof LuaFunction)) return;
+-        DataScriptVM.getInstance().call(onMovementEndFn, scriptVal, p.getCurMap().scripted(), p.scripted());
++        try {
++            DataScriptVM.getInstance().call(onMovementEndFn, scriptVal, p.getCurMap().scripted(), p.scripted());
++        } catch (Exception e) {
++            // Mundo LabTech: o GameHandler expulsa o jogador em qualquer excecao; um script de celula com erro
++            // (ex.: a porta do Castelo do Wa Wabbit) derrubava o jogo de quem pisava nela.
++            ScriptVM.logger.error("Script de celula falhou: mapa " + p.getCurMap().getId() + ", celula " + p.getCurCell().getId(), e);
++        }
+     }
+ 
+     @Override
 diff --git a/src/org/starloco/locos/client/Player.java b/src/org/starloco/locos/client/Player.java
-index 6ba6d0f..d21a1a6 100644
+index 6ba6d0f..ea3a0ab 100644
 --- a/src/org/starloco/locos/client/Player.java
 +++ b/src/org/starloco/locos/client/Player.java
 @@ -509,7 +509,7 @@ public class Player implements Scripted<SPlayer>, Actor {
@@ -147,7 +186,45 @@ index 6ba6d0f..d21a1a6 100644
      public boolean unlearnSpell(int spell) {
          if (World.world.getSort(spell) == null) {
              GameServer.a();
-@@ -1818,6 +1871,13 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -1729,11 +1782,32 @@ public class Player implements Scripted<SPlayer>, Actor {
+     }
+ 
+     public void removeSpellShortcutAtPosition(int position) {
+-        _sorts.keySet().stream()
+-            .map(_sortsPlaces::get)
+-            .filter(Objects::nonNull)
+-            .filter(p -> p == position)
+-            .forEach(_sortsPlaces::remove);
++        // Mundo LabTech: o original removia pela chave errada (o id do feitico igual ao numero da posicao), o feitico
++        // antigo ficava no mesmo lugar e voltava para a barra no proximo SL (subir de nivel, fim de luta, login).
++        _sortsPlaces.values().removeIf(p -> p != null && p == position);
++    }
++
++    /**
++     * Mundo LabTech: barras salvas com o bug acima tem varios feiticos na mesma posicao. Fica o que o cliente mostrava
++     * (o ultimo na ordem do SL); os outros saem da barra. Atalhos de feiticos que o personagem nao tem tambem saem.
++     * @return quantos atalhos sairam.
++     */
++    public int dedupeSpellShortcuts() {
++        Map<Integer, Integer> fica = new HashMap<>();   // posicao -> feitico
++        for (int id : _sorts.keySet()) {
++            Integer pos = _sortsPlaces.get(id);
++            if (pos != null) fica.put(pos, id);
++        }
++        int n = 0;
++        Iterator<Map.Entry<Integer, Integer>> it = _sortsPlaces.entrySet().iterator();
++        while (it.hasNext()) {
++            Map.Entry<Integer, Integer> en = it.next();
++            if (!Objects.equals(fica.get(en.getValue()), en.getKey())) {
++                it.remove();
++                n++;
++            }
++        }
++        return n;
+     }
+ 
+     public Spell.SortStats getSortStatBySortIfHas(int spellID) {
+@@ -1818,6 +1892,14 @@ public class Player implements Scripted<SPlayer>, Actor {
          if (this._mount != null)
              SocketManager.GAME_SEND_Re_PACKET(this, "+", this._mount);
  
@@ -155,13 +232,14 @@ index 6ba6d0f..d21a1a6 100644
 +        int tirados = unequipAboveLevel();
 +        List<String> novos = this.classe == Constant.CLASS_LABTECH && !_morphMode
 +                ? org.starloco.locos.panel.ClassSpellBar.sync(this) : null;
++        if (!_morphMode) tirados += dedupeSpellShortcuts();
 +        if (tirados > 0 || novos != null)
 +            DatabaseManager.get(PlayerData.class).update(this);
 +
          SocketManager.GAME_SEND_Rx_PACKET(this);
          SocketManager.GAME_SEND_ASK(client, this);
  
-@@ -1883,6 +1943,12 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -1883,6 +1965,12 @@ public class Player implements Scripted<SPlayer>, Actor {
          //Actualisation dans la DB
          DatabaseManager.get(AccountData.class).updateLastConnection(getAccount());
          SocketManager.GAME_SEND_MESSAGE(this, Config.startMessage.isEmpty() ? this.getLang().trans("client.player.onjoingame.startmessage") : Config.startMessage);
@@ -174,7 +252,28 @@ index 6ba6d0f..d21a1a6 100644
          for (GameObject object : this.objects.values()) {
              if (object.getTemplate().getType() == Constant.ITEM_TYPE_FAMILIER) {
                  PetEntry p = World.world.getPetsEntry(object.getGuid());
-@@ -2337,6 +2403,7 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -2004,10 +2092,16 @@ public class Player implements Scripted<SPlayer>, Actor {
+                     setCurrentTitle(0);
+                 Group g = this.getGroup();
+                 int level = this.getLevel();
+-                if (g != null)
+-                    if (!g.isPlayer() || this.get_size() <= 0) // Si c'est un groupe non joueur ou que l'on est invisible on cache l'aura
+-                        level = 1;
+-                str.append((level > 99 ? (level > 199 ? (2) : (1)) : (0))).append(";");
++                if (this.classe == Constant.CLASS_LABTECH && level > 99 && this.get_size() > 0) {
++                    // Mundo LabTech: o LabTech usa a aura 4 (a fumaca fantasma que o jogo base nunca mostrou) a partir do
++                    // nivel 100, tambem nos GMs. So some quando o personagem esta invisivel.
++                    str.append(4).append(";");
++                } else {
++                    if (g != null)
++                        if (!g.isPlayer() || this.get_size() <= 0) // Si c'est un groupe non joueur ou que l'on est invisible on cache l'aura
++                            level = 1;
++                    str.append((level > 99 ? (level > 199 ? (2) : (1)) : (0))).append(";");
++                }
+             }
+             str.append(";");//Emote
+             str.append(";");//Emote timer
+@@ -2337,6 +2431,7 @@ public class Player implements Scripted<SPlayer>, Actor {
      }
  
      public int getMaxPod() {
@@ -182,7 +281,7 @@ index 6ba6d0f..d21a1a6 100644
          Stats total = new Stats(false, null);
          total = Stats.cumulStat(total, this.getStats());
          total = Stats.cumulStat(total, this.getStuffStats());
-@@ -2751,6 +2818,8 @@ public class Player implements Scripted<SPlayer>, Actor {
+@@ -2751,6 +2846,8 @@ public class Player implements Scripted<SPlayer>, Actor {
          if (this.getLevel() == 100)
              this.getStats().addOneStat(Constant.STATS_ADD_PA, 1);
          Constant.onLevelUpSpells(this, this.getLevel());
@@ -701,10 +800,10 @@ index deaf73c..879c77c 100644
                          if (!player.hasItemTemplate(item, 1, false) && !player.hasItemTemplate(item2, 1, false))
 diff --git a/src/org/starloco/locos/panel/ChatVivo.java b/src/org/starloco/locos/panel/ChatVivo.java
 new file mode 100644
-index 0000000..0ed5486
+index 0000000..c33c85b
 --- /dev/null
 +++ b/src/org/starloco/locos/panel/ChatVivo.java
-@@ -0,0 +1,1368 @@
+@@ -0,0 +1,1521 @@
 +package org.starloco.locos.panel;
 +
 +import org.starloco.locos.area.SubArea;
@@ -725,6 +824,7 @@ index 0000000..0ed5486
 +import org.starloco.locos.kernel.Main;
 +import org.starloco.locos.object.GameObject;
 +import org.starloco.locos.object.ObjectTemplate;
++import org.starloco.locos.object.entity.SoulStone;
 +
 +import java.nio.charset.StandardCharsets;
 +import java.nio.file.Files;
@@ -752,6 +852,8 @@ index 0000000..0ed5486
 +
 +    private static final Path ARQUIVO = Paths.get("scripts", "labtech", "chat_vivo.tsv");
 +    private static final Path PROGRESSO = Paths.get("labtech_calaboucos.tsv");
++    private static final Path ALMAS = Paths.get("labtech_almas.tsv");
++    private static final int PEDRA_ALMA = 7010;
 +    private static final String DICAS = "?", ITENS = ":", CHEFES = "^";
 +    private static final Set<Integer> TIPOS_BONS = new HashSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 23, 81, 82, 113));
 +    private static final int[] POS_EQUIP = {6, 7, 0, 2, 4, 3, 5};
@@ -761,7 +863,7 @@ index 0000000..0ed5486
 +    private static final int[] STAT_ELEMENTO = {Constant.STATS_ADD_FORC, Constant.STATS_ADD_INTE, Constant.STATS_ADD_AGIL, Constant.STATS_ADD_CHAN};
 +    private static final int RUNA_PA = 1557, RUNA_PM = 1558, GELANO = 2469;
 +    private static final String[] RODA = {"dica", "build", "oportunidade", "chefe", "curiosidade", "dica", "fm", "missao",
-+            "conjunto", "oportunidade", "segredo", "dica", "raro", "local", "procurado"};
++            "conjunto", "oportunidade", "segredo", "dica", "raro", "local", "procurado", "cacada"};
 +
 +    // ------------------------------------------------------------------ dados do TSV
 +    private static class Frase {
@@ -809,7 +911,7 @@ index 0000000..0ed5486
 +    private final Map<Integer, Chefe> chefes = new HashMap<>();
 +    private final Map<Integer, String> nomeMob = new HashMap<>(), nomeSa = new HashMap<>();
 +    private final Map<Integer, int[]> mobZonas = new HashMap<>(), procurados = new HashMap<>();
-+    private final Set<Integer> raros = new HashSet<>();
++    private final Set<Integer> raros = new HashSet<>(), arqui = new HashSet<>();
 +    private final List<Local> locais = new ArrayList<>();
 +    private final List<Calabouco> calaboucos = new ArrayList<>();
 +    private String[] estatistica = {"?", "?", "?", "?"};
@@ -845,6 +947,8 @@ index 0000000..0ed5486
 +    private volatile Evento evento;
 +    private final Map<Integer, Set<String>> progresso = new ConcurrentHashMap<>();
 +    private boolean progressoLido;
++    private final Map<Integer, Set<String>> almas = new ConcurrentHashMap<>();
++    private boolean almasLidas;
 +    private final Map<Integer, int[]> cacheFm = new ConcurrentHashMap<>();
 +
 +    public ChatVivo(int wait) {
@@ -918,6 +1022,7 @@ index 0000000..0ed5486
 +            case "raro": return raro(p, e);
 +            case "local": return local(p, e);
 +            case "procurado": return procurado(p, e);
++            case "cacada": return cacada(p, e, false);
 +            default: return false;
 +        }
 +    }
@@ -967,8 +1072,13 @@ index 0000000..0ed5486
 +            for (Fighter f : vencedores)
 +                if (f != null && f.getPlayer() != null) ganhou.add(f.getPlayer().getId());
 +            Set<Integer> mobs = new HashSet<>();
-+            for (Fighter f : fight.getFighters(3))
-+                if (f.getMob() != null) mobs.add(f.getMob().getTemplate().getId());
++            Map<Integer, Integer> almasLuta = new HashMap<>();   // raro vencido -> n\u00edvel
++            for (Fighter f : fight.getFighters(3)) {
++                if (f.getMob() == null) continue;
++                int id = f.getMob().getTemplate().getId();
++                mobs.add(id);
++                if (!f.isInvocation() && f.getInvocator() == null && instance.ehRaro(id)) almasLuta.merge(id, f.getLvl(), Math::max);
++            }
 +            int mapa = fight.getMapOld() != null ? fight.getMapOld().getId() : -1;
 +            Evento ev = instance.evento;
 +            boolean doEvento = ev != null && ev.grupo != Integer.MIN_VALUE && mapa == ev.mapa && fight.getMobGroup() != null
@@ -976,6 +1086,7 @@ index 0000000..0ed5486
 +            for (Player p : jogadores(fight)) {
 +                if (!ganhou.contains(p.getId())) continue;
 +                instance.calaboucoVencido(p, mapa, mobs);
++                if (!almasLuta.isEmpty()) instance.almasCapturadas(p, almasLuta);
 +                if (doEvento) {
 +                    Map<String, String> v = instance.vars(p);
 +                    v.put("zona", ev.zona);
@@ -1028,6 +1139,7 @@ index 0000000..0ed5486
 +            case "fm": cv.fm(p, e, arg); return true;
 +            case "chefe": cv.chefe(p, e, null); return true;
 +            case "procurado": case "procurados": cv.procurado(p, e); return true;
++            case "almas": case "alma": case "cacada": case "ca\u00e7ada": cv.cacada(p, e, true); return true;
 +            case "raro": case "raros": if (!cv.raro(p, e)) p.sendMessage("Nenhum monstro raro no mundo agora. Fique de olho."); return true;
 +            case "segredo": case "segredos": cv.local(p, e); return true;
 +            case "curiosidade": cv.frase(p, e, cv.curiosidades, DICAS); return true;
@@ -1451,6 +1563,10 @@ index 0000000..0ed5486
 +        v.put("nivel_mob", String.valueOf(s.nivel));
 +        v.put("mapa", String.valueOf(s.mapa));
 +        v.put("onde", "Visto agora em " + nomeSa(s.sa) + " [" + s.x + "," + s.y + "].");
++        boolean tem = almasDe(p).contains(String.valueOf(mob));
++        v.put("alma", "raro".equals(tipo)
++                ? (tem ? "Minha alma voc\u00ea j\u00e1 tem." : "Me ven\u00e7a e a minha alma vai para a sua Pedra de Alma.")
++                : (tem ? "A alma dele j\u00e1 est\u00e1 na sua cole\u00e7\u00e3o." : "A alma dele ainda falta na sua Ca\u00e7ada aos Raros."));
 +        e.ultimoMapa = s.mapa;
 +        return modelo(p, e, CHEFES, tipo, v, null);
 +    }
@@ -1585,6 +1701,136 @@ index 0000000..0ed5486
 +            Files.write(PROGRESSO, linhas, StandardCharsets.UTF_8);
 +        } catch (Exception ex) {
 +            Main.logger.error("Chat vivo: salvar progresso", ex);
++        }
++    }
++
++    // ================================================================== Ca\u00e7ada aos Raros (almas)
++    private boolean ehRaro(int id) {
++        return raros.contains(id) || procurados.containsKey(id);
++    }
++
++    /** Cada raro vencido vira uma Pedra de Alma cheia (a mesma da captura do jogo) e entra no \u00e1lbum do jogador. */
++    private void almasCapturadas(Player p, Map<Integer, Integer> mobs) {
++        Set<String> feitas = almasDe(p);
++        Estado e = estado(p);
++        boolean mudou = false;
++        for (Map.Entry<Integer, Integer> m : mobs.entrySet()) {
++            int id = m.getKey();
++            try {
++                SoulStone pedra = new SoulStone(1, PEDRA_ALMA, Constant.ITEM_POS_NO_EQUIPED, id + "," + Math.max(1, m.getValue()));
++                if (p.addItem(pedra, false, true)) World.world.addGameObject(pedra);
++            } catch (Exception ex) {
++                Main.logger.error("Chat vivo: pedra de alma", ex);
++            }
++            boolean nova = feitas.add(String.valueOf(id));
++            mudou |= nova;
++            Map<String, String> v = vars(p);
++            v.put("mob", nomeMob(id));
++            v.put("pedra", "\u00b00");
++            v.put("progresso", progressoAlmas(feitas));
++            modelo(p, e, CHEFES, nova ? "alma_ok" : "alma_repetida", v, Collections.singletonList(PEDRA_ALMA));
++            String album = nova ? albumCompleto(feitas, id) : null;
++            if (album != null) {
++                v.put("album", album);
++                anunciarTodos(CHEFES, modelos.get("alma_fim"), v, null);
++            }
++        }
++        if (mudou) salvarAlmas();
++    }
++
++    private String progressoAlmas(Set<String> feitas) {
++        int r = 0, tr = 0, a = 0, ta = 0, pr = 0;
++        for (int id : raros) {
++            if (procurados.containsKey(id)) continue;
++            boolean tem = feitas.contains(String.valueOf(id));
++            if (arqui.contains(id)) {
++                ta++;
++                if (tem) a++;
++            } else {
++                tr++;
++                if (tem) r++;
++            }
++        }
++        for (int id : procurados.keySet())
++            if (feitas.contains(String.valueOf(id))) pr++;
++        return r + " de " + tr + " raros, " + pr + " de " + procurados.size() + " procurados e " + a + " de " + ta + " arquimonstros";
++    }
++
++    /** Nome do \u00e1lbum que ficou completo com esta alma, ou null. */
++    private String albumCompleto(Set<String> feitas, int id) {
++        List<Integer> album = new ArrayList<>();
++        String nome;
++        if (procurados.containsKey(id)) {
++            album.addAll(procurados.keySet());
++            nome = "procurados";
++        } else {
++            boolean ehArqui = arqui.contains(id);
++            for (int x : raros)
++                if (!procurados.containsKey(x) && arqui.contains(x) == ehArqui) album.add(x);
++            nome = ehArqui ? "arquimonstros" : "monstros raros";
++        }
++        for (int x : album)
++            if (!feitas.contains(String.valueOf(x))) return null;
++        return nome;
++    }
++
++    /** Progresso da ca\u00e7ada e os raros sem alma vivos agora, do n\u00edvel mais perto do jogador. */
++    private boolean cacada(Player p, Estado e, boolean pedido) {
++        Set<String> feitas = almasDe(p);
++        Map<Integer, Spot> achados = new HashMap<>();
++        Set<Integer> todos = new HashSet<>(raros);
++        todos.addAll(procurados.keySet());
++        for (int id : todos) {
++            Spot s = feitas.contains(String.valueOf(id)) ? null : primeiroVivo(id);
++            if (s != null) achados.put(id, s);
++        }
++        if (achados.isEmpty() && !pedido) return false;
++        List<Integer> faltam = new ArrayList<>(achados.keySet());
++        faltam.sort(Comparator.comparingInt(id -> Math.abs(achados.get(id).nivel - p.getLevel())));
++        Map<String, String> v = vars(p);
++        v.put("progresso", progressoAlmas(feitas));
++        StringBuilder sb = new StringBuilder();
++        for (int i = 0; i < Math.min(3, faltam.size()); i++) {
++            int id = faltam.get(i);
++            Spot s = achados.get(id);
++            sb.append(i > 0 ? "; " : "").append(nomeMob(id)).append(" (nv. ").append(s.nivel).append(", ").append(nomeSa(s.sa))
++                    .append(" [").append(s.x).append(",").append(s.y).append("], .ir ").append(s.mapa).append(")");
++            if (i == 0) e.ultimoMapa = s.mapa;
++        }
++        v.put("alvos", faltam.isEmpty() ? "nenhuma solta agora. Fique de olho no canal Chefes." : sb.toString());
++        return modelo(p, e, CHEFES, "cacada", v, null);
++    }
++
++    private Set<String> almasDe(Player p) {
++        lerAlmas();
++        return almas.computeIfAbsent(p.getId(), k -> ConcurrentHashMap.newKeySet());
++    }
++
++    private synchronized void lerAlmas() {
++        if (almasLidas) return;
++        almasLidas = true;
++        try {
++            if (!Files.exists(ALMAS)) return;
++            for (String linha : Files.readAllLines(ALMAS, StandardCharsets.UTF_8)) {
++                String[] c = linha.split("\t");
++                if (c.length < 2) continue;
++                Set<String> s = ConcurrentHashMap.newKeySet();
++                s.addAll(Arrays.asList(c[1].split(",")));
++                almas.put(Integer.parseInt(c[0]), s);
++            }
++        } catch (Exception ex) {
++            Main.logger.error("Chat vivo: almas", ex);
++        }
++    }
++
++    private synchronized void salvarAlmas() {
++        try {
++            List<String> linhas = new ArrayList<>();
++            for (Map.Entry<Integer, Set<String>> en : almas.entrySet())
++                linhas.add(en.getKey() + "\t" + String.join(",", en.getValue()));
++            Files.write(ALMAS, linhas, StandardCharsets.UTF_8);
++        } catch (Exception ex) {
++            Main.logger.error("Chat vivo: salvar almas", ex);
 +        }
 +    }
 +
@@ -1895,6 +2141,7 @@ index 0000000..0ed5486
 +        v.put("xp", String.valueOf(Config.rateXp));
 +        v.put("drop", String.valueOf(Config.rateDrop));
 +        v.put("prosp", String.valueOf(prospeccao(p)));
++        v.put("alma", "");
 +        return v;
 +    }
 +
@@ -1962,7 +2209,7 @@ index 0000000..0ed5486
 +            if (mod == lidoEm) return;
 +            dicas.clear(); modelos.clear(); eventosTxt.clear(); dicasNivel.clear(); dicasNivelFaixa.clear();
 +            curiosidades.clear(); segredos.clear(); boasVindas.clear(); builds.clear(); conjuntos.clear(); zonas.clear();
-+            chefes.clear(); nomeMob.clear(); nomeSa.clear(); mobZonas.clear(); procurados.clear(); raros.clear();
++            chefes.clear(); nomeMob.clear(); nomeSa.clear(); mobZonas.clear(); procurados.clear(); raros.clear(); arqui.clear();
 +            locais.clear(); calaboucos.clear();
 +            for (String linha : Files.readAllLines(ARQUIVO, StandardCharsets.UTF_8)) {
 +                if (linha.isEmpty() || linha.startsWith("#")) continue;
@@ -2029,7 +2276,12 @@ index 0000000..0ed5486
 +                        case "nome_mob": nomeMob.put(Integer.parseInt(c[1]), c[2]); break;
 +                        case "nome_sa": nomeSa.put(Integer.parseInt(c[1]), c[2]); break;
 +                        case "mob_zona": mobZonas.put(Integer.parseInt(c[1]), Arrays.stream(c[2].split(",")).mapToInt(Integer::parseInt).toArray()); break;
-+                        case "raro": raros.add(Integer.parseInt(c[1])); break;
++                        case "raro": {
++                            int id = Integer.parseInt(c[1]);
++                            raros.add(id);
++                            if (c.length > 2 && c[2].equals("arqui")) arqui.add(id);
++                            break;
++                        }
 +                        case "procurado": {
 +                            int[] sas = c.length > 2 && !c[2].isEmpty()
 +                                    ? Arrays.stream(c[2].split(",")).filter(x -> !x.trim().isEmpty()).mapToInt(x -> Integer.parseInt(x.trim())).toArray() : new int[0];
@@ -2583,7 +2835,7 @@ index 0000000..efc901c
 +}
 diff --git a/src/org/starloco/locos/panel/Figurantes.java b/src/org/starloco/locos/panel/Figurantes.java
 new file mode 100644
-index 0000000..47cb00e
+index 0000000..4083c62
 --- /dev/null
 +++ b/src/org/starloco/locos/panel/Figurantes.java
 @@ -0,0 +1,471 @@
@@ -2886,7 +3138,7 @@ index 0000000..47cb00e
 +    /** Mesmo formato de Player.parseToGM: c\u00e9lula;dire\u00e7\u00e3o;0;id;nome;classe;gfx^tamanho;sexo;alinhamento;cores;roupa;aura... */
 +    private String gm(Fig f) {
 +        int[] c = PALETAS[f.cor];
-+        int aura = f.nivel > 199 ? 2 : f.nivel > 99 ? 1 : 0;
++        int aura = f.nivel < 100 ? 0 : f.classe == 13 ? 4 : f.nivel > 199 ? 2 : 1;   // LabTech: aura 4
 +        return f.cell + ";" + (1 + 2 * ThreadLocalRandom.current().nextInt(4)) + ";0;" + f.id + ";" + f.nome + ";" + f.classe + ";"
 +                + (f.classe * 10 + f.sexo) + "^100;" + f.sexo + ";0,0,0," + (f.nivel + f.id) + ";"
 +                + Integer.toHexString(c[0]) + ";" + Integer.toHexString(c[1]) + ";" + Integer.toHexString(c[2]) + ";"
@@ -3256,7 +3508,7 @@ index 0000000..83f67f6
 +    }
 +}
 diff --git a/src/org/starloco/locos/script/proxy/SPlayer.java b/src/org/starloco/locos/script/proxy/SPlayer.java
-index 2ae201a..9f3faa7 100644
+index 2ae201a..3a7e659 100644
 --- a/src/org/starloco/locos/script/proxy/SPlayer.java
 +++ b/src/org/starloco/locos/script/proxy/SPlayer.java
 @@ -73,6 +73,22 @@ public class SPlayer extends DefaultUserdata<Player> {
@@ -3282,6 +3534,27 @@ index 2ae201a..9f3faa7 100644
      @SuppressWarnings("unused")
      private static SAccount account(Player p) { return p.getAccount().scripted(); }
  
+@@ -224,6 +240,7 @@ public class SPlayer extends DefaultUserdata<Player> {
+ 
+     @SuppressWarnings("unused")
+     private static void sendInfoMsg(Player p, ArgumentIterator args) {
++        if (!args.hasNext()) return;   // LabTech: script sem mensagem nao derruba o jogador
+         int type = args.nextInt();
+         if(type>9) throw new IllegalArgumentException("SPlayer:sendInfoMsg type param must be < 10");
+         int msgId = args.nextInt();
+@@ -231,6 +248,12 @@ public class SPlayer extends DefaultUserdata<Player> {
+         SocketManager.GAME_SEND_Im_PACKET(p, type+String.valueOf(msgId));
+     }
+ 
++    /** Mundo LabTech: texto livre no chat do jogador (os scripts so tinham mensagens do lang por numero). */
++    @SuppressWarnings("unused")
++    private static void sendMessage(Player p, ArgumentIterator args) {
++        p.sendMessage(args.nextString().toString());
++    }
++
+     @SuppressWarnings("unused")
+     private static void startScenario(Player p, ArgumentIterator args) {
+         int id = args.nextInt();
 diff --git a/src/resources/translations/pt_PT.yaml b/src/resources/translations/pt_PT.yaml
 index 7b2add6..f9e497d 100644
 --- a/src/resources/translations/pt_PT.yaml

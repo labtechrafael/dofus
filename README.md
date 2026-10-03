@@ -9,8 +9,8 @@ controlar tudo.
 Os LabTechs são inventores que não aceitaram receber poder "de mão beijada" dos deuses. Eles construíram o próprio
 poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e cerveja artesanal feita com as próprias mãos.
 
-| 🧪 13ª classe | 🏝️ 1 arquipélago | 🍺 20 celebridades | 💬 chat vivo | 🐉 65 fichas de chefe | 🗝️ 38 calabouços na rota | 🧍 10 figurantes |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 🧪 13ª classe | 🏝️ 1 arquipélago | 🍺 20 celebridades | 💬 chat vivo | 🐉 65 fichas de chefe | 🗝️ 38 calabouços na rota | 👻 320 almas para caçar | 🧍 10 figurantes |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 
 > **Aviso:** projeto de fã, sem fins lucrativos, sem relação com a Ankama. Dofus é marca registrada da Ankama.
 > Este repositório **não contém o jogo** nem arquivos da Ankama. Para jogar, você precisa da sua própria cópia do
@@ -40,7 +40,8 @@ poder: uma Manopla Gambiarra com doze núcleos, um jaleco manchado de graxa e ce
   - molho de chaves que não acaba;
   - todos os zaaps liberados.
 - **[Mundo vivo](#o-mundo-vivo)**: chat que conversa com você (dicas, builds, drops, forjamagia, chefes, raros,
-  procurados e lugares escondidos), eventos, a Rota dos Calabouços (38, com progresso salvo) e figurantes.
+  procurados e lugares escondidos), eventos, a Rota dos Calabouços (38, com progresso salvo), a Caçada aos Raros
+  (a alma de cada raro vencido numa Pedra de Alma) e figurantes.
 - **Painel web** (http://127.0.0.1:8080):
   - ligar e desligar o servidor;
   - criar contas e itens;
@@ -65,6 +66,9 @@ gente andando por aí.
   Quando um raro nasce, o chat avisa.
 - **Eventos**: ao entrar e a cada meia hora, uma invasão, um chefe passeando fora do calabouço ou chuva de drop em
   dobro num lugar do seu nível.
+- **Caçada aos Raros**: vença um monstro raro, um procurado ou um arquimonstro e a alma dele vai para uma **Pedra de
+  Alma** no seu inventário. São três álbuns, 23 raros, 11 procurados e 286 arquimonstros, com progresso salvo.
+  `.almas` mostra quanto falta e quem está vivo agora, com o caminho.
 - **Figurantes**: 10 personagens que imitam jogadores. Andam, sentam, caçam os monstros do mapa, voltam contando se
   venceram e anunciam vendas. Não interagem com você: só deixam o mundo com cara de servidor cheio.
 - Cada canal liga e desliga nas caixinhas do chat, e `.chatvivo desliga` cala tudo.
@@ -146,6 +150,7 @@ O instalador baixa sozinho, das fontes oficiais:
 | Chat | `.dica` `.build` `.conjunto` `.drop` `.fm` `.chefe` `.curiosidade` | O chat vivo mostra na hora |
 | Chat | `.procurado` `.raro` `.segredo` | Procurados, monstros raros e lugares escondidos, com o caminho |
 | Chat | `.calaboucos` `.evento` | Rota dos Calabouços e o evento do momento |
+| Chat | `.almas` | Caçada aos Raros: o seu álbum de almas e os raros vivos que ainda faltam |
 | Chat | `.ir 1234` (ou só `.ir`) | Leva você ao mapa (sem número: ao último lugar anunciado) |
 | Chat | `.chatvivo desliga` / `.chatvivo liga` | Desliga ou liga o chat vivo |
 | Console de admin | `ITEM 10207` | Dá o molho de chaves (entra em qualquer masmorra) |

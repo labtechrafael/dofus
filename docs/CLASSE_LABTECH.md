@@ -74,6 +74,9 @@ miniatura da linha do tempo e o retrato grande da luta.
   no dorso da mão. Faz parte do corpo, então aparece sempre, parado, andando, correndo ou lutando, com qualquer arma.
 - **Caneca de cerveja** na outra mão (o escudo Caneca da Gambiarra).
 - **Drone de IA**: o familiar, um cubo ciano com carinha na tela que flutua ao lado do personagem.
+- **Aura própria**: a partir do nível 100, no lugar das auras de nível 100 e 200, o LabTech mostra uma coluna de
+  fumaça fantasma. Ela está nos arquivos do cliente (a aura 4), mas o jogo original nunca a usou. Aparece também nos
+  GMs; só some quando o personagem fica invisível.
 
 ![A manopla no braço, correndo](imagens/corrida.png)
 
